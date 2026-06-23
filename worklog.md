@@ -500,3 +500,41 @@ Stage Summary:
 - Mobile responsive verified on all pages (home, register, payment, confirmation, admin)
 - Pushed to GitHub commit 4d56dfd on main branch
 - 4 files changed, 242 insertions, 9 deletions
+
+---
+Task ID: 10
+Agent: main (Super Z)
+Task: Move all program information into the Hero's 'La formation en bref' card, delete the TrainingInfo section entirely.
+
+Work Log:
+- Rewrote Hero.tsx to include ALL program info in the right-side card:
+  - 5 detail rows: Dates, Durée, Lieu (with full address), Places, Attestation
+  - Price tags: Inscription 5 000 FCFA + Complète 25 000 FCFA (3 jours inclus)
+  - 'Ce que vous apprendrez' section with 4 items (coulage, coloration,
+    finitions, stratégies de vente)
+  - Added Divider component for visual separation between rows
+  - Added 'long' prop to DetailRow for full address display
+- Deleted src/components/site/TrainingInfo.tsx (283 lines removed)
+- Removed <TrainingInfo /> import and usage from page.tsx
+- Removed 'Formation' link from Header (desktop nav + mobile menu)
+- Removed 'Programme' link from Footer navigation
+- Changed Hero's secondary button from 'Voir le programme' (#formation) to
+  'Voir les créations' (#creations)
+- Added id="formation" to the Hero section itself so old #formation bookmarks
+  still scroll to the hero
+
+VLM verification (desktop):
+- Card shows: Dates, Durée, Lieu, Places, Attestation ✅
+- Price tags: 5 000 + 25 000 FCFA ✅
+- 'Ce que vous apprendrez' with coulage/coloration/finitions ✅
+- Old 'Tout ce qu'il faut savoir' section: GONE ✅
+
+VLM verification (mobile 375px):
+- Card readable, no overflow ✅
+- All content fits within viewport ✅
+
+Stage Summary:
+- Program info consolidated into Hero card — single source of truth
+- TrainingInfo section completely removed (cleaner, less redundancy)
+- Pushed to GitHub commit f1694d4 on main branch
+- 5 files changed, 92 insertions, 283 deletions (net -191 lines)
