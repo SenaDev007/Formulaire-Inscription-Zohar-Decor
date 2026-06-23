@@ -15,6 +15,11 @@ const WHATSAPP_QR_URL =
   (process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app") +
   "/qr-whatsapp-group.jpeg";
 
+// Public URL of the Zohar Décor logo for email headers.
+export const LOGO_URL =
+  (process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app") +
+  "/logo_zohar_decor.png";
+
 export const resend = apiKey ? new Resend(apiKey) : null;
 
 export const TRAINING_INFO = {
@@ -80,6 +85,9 @@ export function buildConfirmationEmailHtml({
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #EFE8DD;border-radius:12px;overflow:hidden;">
           <tr style="background:#111111;">
             <td align="center" style="padding:32px 24px;color:#C9A227;">
+              <img src="${LOGO_URL}" alt="Zohar Décor"
+                   width="72" height="72"
+                   style="width:72px;height:72px;border-radius:50%;border:2px solid #C9A227;background:#F8F6F2;padding:4px;margin-bottom:12px;display:block;" />
               <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:1px;">ZOHAR DÉCOR</h1>
               <p style="margin:6px 0 0;color:#F8F6F2;font-size:13px;letter-spacing:2px;text-transform:uppercase;">${TRAINING_INFO.slogan}</p>
             </td>
@@ -291,6 +299,9 @@ export function buildAdminNotificationHtml(
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #EFE8DD;border-radius:12px;overflow:hidden;">
           <tr style="background:${headerColor};">
             <td align="center" style="padding:20px 24px;color:#FFFFFF;">
+              <img src="${LOGO_URL}" alt="Zohar Décor"
+                   width="56" height="56"
+                   style="width:56px;height:56px;border-radius:50%;border:2px solid #FFFFFF;background:#F8F6F2;padding:3px;margin-bottom:8px;display:block;" />
               <h1 style="margin:0;font-size:18px;font-weight:700;letter-spacing:1px;">ZOHAR DÉCOR — ADMIN</h1>
               <p style="margin:4px 0 0;color:#FFFFFF;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">${title}</p>
             </td>

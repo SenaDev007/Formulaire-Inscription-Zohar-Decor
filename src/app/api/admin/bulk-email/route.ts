@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { sendBulkEmail } from "@/lib/email";
+import { sendBulkEmail, LOGO_URL } from "@/lib/email";
 import { z } from "zod";
 
 const schema = z.object({
@@ -53,6 +53,8 @@ export async function POST(req: NextRequest) {
     <!DOCTYPE html><html><body style="font-family:Helvetica,Arial,sans-serif;background:#F8F6F2;margin:0;padding:32px 0;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#FFFFFF;border-radius:12px;overflow:hidden;border:1px solid #EFE8DD;">
         <tr><td style="background:#111111;padding:24px;color:#C9A227;text-align:center;">
+          <img src="${LOGO_URL}" alt="Zohar Décor" width="64" height="64"
+               style="width:64px;height:64px;border-radius:50%;border:2px solid #C9A227;background:#F8F6F2;padding:3px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;" />
           <h1 style="margin:0;font-size:20px;letter-spacing:2px;">ZOHAR DÉCOR</h1>
           <p style="margin:4px 0 0;color:#F8F6F2;font-size:11px;letter-spacing:2px;">Des souvenirs qui brillent à jamais</p>
         </td></tr>
