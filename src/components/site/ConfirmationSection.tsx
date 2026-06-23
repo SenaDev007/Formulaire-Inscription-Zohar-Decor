@@ -2,16 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 import {
   CheckCircle2,
   Loader2,
   AlertCircle,
   Mail,
-  Download,
   Home,
   Calendar,
   MapPin,
   Copy,
+  RotateCcw,
+  MessageCircle,
+  Phone,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -106,64 +110,110 @@ export function ConfirmationSection({
     };
   }, [registrationId]);
 
+  // === Confetti on success ===
+  useEffect(() => {
+    if (status !== "paid") return;
+
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ["#C9A227", "#E8C766", "#FFFFFF"],
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ["#C9A227", "#E8C766", "#FFFFFF"],
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+
+    frame();
+  }, [status]);
+
   const copyRegId = () => {
     if (!data) return;
     navigator.clipboard.writeText(data.participant.registrationId);
     toast({ title: "Copié", description: "Numéro d'inscription copié." });
   };
 
+  // === Loading state ===
   if (status === "loading") {
     return (
-      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-beige/30">
+      <section className="min-h-screen bg-noir flex items-center justify-center px-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-[#C9A227] animate-spin mx-auto" />
-          <p className="mt-4 text-muted-foreground">Vérification du paiement...</p>
+          <p className="mt-4 text-blanc/60 text-sm">
+            Vérification du paiement...
+          </p>
         </div>
-      </div>
+      </section>
     );
   }
 
+  // === Error state ===
   if (status === "error") {
     return (
-      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-beige/30 px-4">
-        <div className="bg-blanc rounded-2xl premium-shadow border border-beige p-8 max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-          <h2 className="text-xl font-bold text-noir mt-4">Inscription introuvable</h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            Le numéro {registrationId} n'existe pas ou n'a pas pu être retrouvé.
-          </p>
-          <Button onClick={onBackHome} className="mt-6 bg-noir text-blanc hover:bg-[#1A1A1A] rounded-full">
-            Retour à l'accueil
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === "pending" && data) {
-    return (
-      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-beige/30 px-4 py-12">
+      <section className="min-h-screen bg-noir flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blanc rounded-3xl premium-shadow-lg border border-beige p-8 max-w-md text-center"
+          className="bg-[#1A1A1A] rounded-2xl border border-red-500/30 p-8 max-w-md text-center"
         >
-          <div className="w-16 h-16 rounded-full bg-[#C9A227]/10 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <h2 className="text-xl font-bold text-blanc mt-4">
+            Inscription introuvable
+          </h2>
+          <p className="text-sm text-blanc/60 mt-2">
+            Le numéro {registrationId} n'existe pas ou n'a pas pu être retrouvé.
+          </p>
+          <Button
+            onClick={onBackHome}
+            className="mt-6 bg-[#C9A227] text-noir hover:bg-[#D4AF37] rounded-full"
+          >
+            Retour à l'accueil
+          </Button>
+        </motion.div>
+      </section>
+    );
+  }
+
+  // === Pending state ===
+  if (status === "pending" && data) {
+    return (
+      <section className="min-h-screen bg-noir flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[#1A1A1A] rounded-2xl border border-[#C9A227]/30 p-8 max-w-md text-center shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
+        >
+          <div className="w-16 h-16 rounded-full bg-[#C9A227]/15 flex items-center justify-center mx-auto">
             <Loader2 className="w-8 h-8 text-[#C9A227] animate-spin" />
           </div>
-          <h1 className="text-2xl font-bold text-noir mt-4">
+          <h1 className="text-2xl font-bold text-blanc mt-4">
             Paiement en cours...
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Nous vérifions votre paiement. Cette page s'actualise automatiquement.
+          <p className="text-sm text-blanc/60 mt-2">
+            Nous vérifions votre paiement. Cette page s'actualise
+            automatiquement.
             {pollCount > 2 && " Cela peut prendre quelques instants."}
           </p>
 
-          <div className="mt-6 bg-beige/50 rounded-xl p-4 text-left">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+          <div className="mt-6 bg-[#0A0A0A] rounded-xl p-4 text-left border border-[#C9A227]/20">
+            <p className="text-[10px] uppercase tracking-wider text-blanc/40">
               N° Inscription
             </p>
-            <p className="font-bold text-noir text-lg mt-1">
+            <p className="font-bold text-[#C9A227] text-lg mt-1">
               {data.participant.registrationId}
             </p>
           </div>
@@ -171,7 +221,7 @@ export function ConfirmationSection({
           {data.payment?.paymentUrl && (
             <a
               href={data.payment.paymentUrl}
-              className="block mt-4 text-sm text-[#C9A227] hover:underline"
+              className="block mt-4 text-sm text-[#C9A227] hover:text-[#D4AF37] transition-colors"
             >
               Retourner à la page de paiement →
             </a>
@@ -180,185 +230,234 @@ export function ConfirmationSection({
           <Button
             onClick={onBackHome}
             variant="outline"
-            className="mt-6 rounded-full"
+            className="mt-6 rounded-full border-blanc/20 text-blanc hover:bg-blanc/5"
           >
             Retour à l'accueil
           </Button>
         </motion.div>
-      </div>
+      </section>
     );
   }
 
-  // PAID
+  // === PAID — Success screen with confetti ===
   const amount = data?.payment?.amount ?? TRAINING_INFO.inscriptionFee;
   const formatted = new Intl.NumberFormat("fr-FR").format(amount);
 
   return (
-    <section className="py-12 sm:py-16 bg-beige/30 min-h-[calc(100vh-5rem)]">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
+    <section className="min-h-screen bg-noir text-blanc relative overflow-hidden">
+      {/* Decorative gold blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-[#C9A227]/8 blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-[#E8C766]/8 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          className="text-center"
+        >
+          {/* Animated checkmark */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-blanc rounded-3xl premium-shadow-lg border border-beige overflow-hidden"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#C9A227]/15 border-2 border-[#C9A227] mx-auto mb-6 flex items-center justify-center shadow-[0_0_32px_rgba(201,162,39,0.4)]"
           >
-            {/* Success header */}
-            <div className="bg-noir px-8 py-10 text-center relative overflow-hidden">
-              <div className="absolute inset-0 opacity-20">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 50% 50%, #C9A227 0%, transparent 60%)",
-                  }}
-                />
-              </div>
-              <motion.div
-                initial={{ scale: 0, rotate: -30 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", delay: 0.1 }}
-                className="relative w-20 h-20 rounded-full bg-[#C9A227] flex items-center justify-center mx-auto"
-              >
-                <CheckCircle2 className="w-12 h-12 text-noir" strokeWidth={2.5} />
-              </motion.div>
-              <h1
-                className="relative text-2xl sm:text-3xl font-bold text-blanc mt-4"
-                style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
-              >
-                Félicitations {data?.participant.prenoms} !
-              </h1>
-              <p className="relative text-sm text-blanc/70 mt-2">
-                Votre inscription a été enregistrée avec succès.
-              </p>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 sm:p-8 space-y-6">
-              {/* Registration ID */}
-              <div className="bg-beige/50 rounded-2xl p-5 border border-beige-dark/30">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  Numéro d'inscription
-                </p>
-                <div className="flex items-center justify-between mt-1">
-                  <p
-                    className="text-2xl sm:text-3xl font-bold text-[#C9A227] tracking-wider"
-                    style={{ fontFamily: "var(--font-geist-mono), monospace" }}
-                  >
-                    {data?.participant.registrationId}
-                  </p>
-                  <button
-                    onClick={copyRegId}
-                    className="p-2 rounded-lg hover:bg-blanc transition-colors"
-                    aria-label="Copier"
-                  >
-                    <Copy className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Participant + payment summary */}
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="bg-blanc rounded-xl p-4 border border-beige">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Participant
-                  </p>
-                  <p className="font-semibold text-noir mt-1 text-sm">
-                    {data?.participant.nomComplet}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 break-all">
-                    {data?.participant.email}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {data?.participant.telWhatsApp}
-                  </p>
-                </div>
-                <div className="bg-blanc rounded-xl p-4 border border-beige">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Paiement
-                  </p>
-                  <p className="font-semibold text-noir mt-1 text-sm">
-                    {data?.payment?.type === "COMPLET"
-                      ? "Formation complète"
-                      : "Inscription"}
-                  </p>
-                  <p className="text-lg font-bold text-[#C9A227] mt-1">
-                    {formatted} FCFA
-                  </p>
-                  {data?.payment?.feexpayTransaction && (
-                    <p className="text-[10px] text-muted-foreground mt-1 break-all">
-                      Réf : {data.payment.feexpayTransaction}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Training info */}
-              <div className="bg-noir rounded-2xl p-5 text-blanc">
-                <h3 className="text-xs uppercase tracking-[0.2em] text-[#C9A227] mb-3">
-                  Détails de la formation
-                </h3>
-                <div className="space-y-2.5 text-sm">
-                  <div className="flex items-start gap-2">
-                    <Calendar className="w-4 h-4 text-[#C9A227] mt-0.5 flex-shrink-0" />
-                    <span>
-                      Du <strong>{TRAINING_INFO.startDate}</strong> au{" "}
-                      <strong>{TRAINING_INFO.endDate} {TRAINING_INFO.year}</strong>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-[#C9A227] mt-0.5 flex-shrink-0" />
-                    <span className="text-blanc/80 text-xs leading-relaxed">
-                      {TRAINING_INFO.location}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="grid sm:grid-cols-2 gap-3">
-                {whatsappLink && (
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-[#25D366] text-white text-sm font-semibold hover:bg-[#1DA851] transition-colors premium-shadow"
-                  >
-                    <WhatsAppIcon size={18} className="text-white" />
-                    Voir sur WhatsApp
-                  </a>
-                )}
-                <a
-                  href="mailto:?subject=Mon inscription Zohar Décor&body=Mon numéro d'inscription est " 
-                  className="inline-flex items-center justify-center gap-2 h-12 rounded-full border-2 border-noir text-noir text-sm font-semibold hover:bg-noir hover:text-blanc transition-colors"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (data) {
-                      window.location.href = `mailto:?subject=Inscription Zohar Décor ${data.participant.registrationId}&body=Bonjour, mon numéro d'inscription est ${data.participant.registrationId}. La formation a lieu du ${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year} à ${TRAINING_INFO.location}.`;
-                    }
-                  }}
-                >
-                  <Mail className="w-4 h-4" />
-                  M'envoyer par email
-                </a>
-              </div>
-
-              <p className="text-xs text-center text-muted-foreground leading-relaxed">
-                Un email de confirmation contenant votre reçu a été envoyé à{" "}
-                <strong className="text-noir">{data?.participant.email}</strong>.
-                Pensez à vérifier vos spams.
-              </p>
-
-              <Button
-                onClick={onBackHome}
-                variant="outline"
-                className="w-full h-12 rounded-full"
-              >
-                <Home className="w-4 h-4 mr-2" />
-                Retour à l'accueil
-              </Button>
-            </div>
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.4, ease: "easeOut" }}
+            >
+              <CheckCircle2
+                className="w-12 h-12 sm:w-14 sm:h-14 text-[#C9A227]"
+                strokeWidth={2.5}
+                aria-hidden="true"
+              />
+            </motion.div>
           </motion.div>
-        </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <h1
+              className="text-2xl sm:text-3xl font-bold text-blanc mb-3"
+              style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
+            >
+              Félicitations {data?.participant.prenoms} !
+            </h1>
+            <p className="text-blanc/60 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+              Votre inscription a été enregistrée avec succès. Un email de
+              confirmation avec votre reçu a été envoyé à{" "}
+              <strong className="text-blanc">
+                {data?.participant.email}
+              </strong>
+              .
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Registration ID card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="mt-8 bg-gradient-to-br from-[#C9A227]/15 to-[#1A1A1A] border border-[#C9A227]/40 rounded-2xl p-5 sm:p-6"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50 mb-1">
+                Numéro d'inscription
+              </p>
+              <p
+                className="text-2xl sm:text-3xl font-bold gold-text-gradient tracking-wider"
+                style={{ fontFamily: "var(--font-geist-mono), monospace" }}
+              >
+                {data?.participant.registrationId}
+              </p>
+            </div>
+            <button
+              onClick={copyRegId}
+              className="p-2.5 rounded-xl bg-[#0A0A0A] border border-[#C9A227]/20 hover:border-[#C9A227]/50 transition-colors"
+              aria-label="Copier"
+            >
+              <Copy className="w-4 h-4 text-[#C9A227]" />
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Info grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75 }}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4 text-left"
+        >
+          <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#C9A227]/20">
+            <Calendar className="w-4 h-4 text-[#C9A227] mb-1.5" />
+            <p className="text-[#C9A227] text-[9px] font-semibold uppercase tracking-wider mb-0.5">
+              Dates
+            </p>
+            <p className="text-blanc text-[11px] font-bold leading-tight">
+              09 — 11 juillet
+            </p>
+            <p className="text-blanc/40 text-[9px]">2026</p>
+          </div>
+          <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#C9A227]/20">
+            <Award className="w-4 h-4 text-[#C9A227] mb-1.5" />
+            <p className="text-[#C9A227] text-[9px] font-semibold uppercase tracking-wider mb-0.5">
+              Paiement
+            </p>
+            <p className="text-blanc text-[11px] font-bold leading-tight">
+              {formatted} FCFA
+            </p>
+            <p className="text-blanc/40 text-[9px]">
+              {data?.payment?.type === "COMPLET" ? "Complète" : "Inscription"}
+            </p>
+          </div>
+          <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#C9A227]/20">
+            <Mail className="w-4 h-4 text-[#C9A227] mb-1.5" />
+            <p className="text-[#C9A227] text-[9px] font-semibold uppercase tracking-wider mb-0.5">
+              Email
+            </p>
+            <p className="text-blanc text-[11px] font-bold leading-tight">
+              Reçu envoyé
+            </p>
+            <p className="text-blanc/40 text-[9px]">vérifiez spam</p>
+          </div>
+          <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#C9A227]/20">
+            <Phone className="w-4 h-4 text-[#C9A227] mb-1.5" />
+            <p className="text-[#C9A227] text-[9px] font-semibold uppercase tracking-wider mb-0.5">
+              Contact
+            </p>
+            <p className="text-blanc text-[11px] font-bold leading-tight">
+              {TRAINING_INFO.contactPhone}
+            </p>
+            <p className="text-blanc/40 text-[9px]">WhatsApp</p>
+          </div>
+        </motion.div>
+
+        {/* Training details card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.85 }}
+          className="mt-4 bg-[#1A1A1A] border border-[#C9A227]/20 rounded-xl p-5"
+        >
+          <p className="text-[#C9A227] text-[10px] font-semibold uppercase tracking-wider mb-3">
+            Détails de la formation
+          </p>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-start gap-2.5">
+              <Calendar className="w-4 h-4 text-[#C9A227] mt-0.5 flex-shrink-0" />
+              <span className="text-blanc/80">
+                Du <strong className="text-blanc">09 juillet</strong> au{" "}
+                <strong className="text-blanc">11 juillet 2026</strong>
+              </span>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <MapPin className="w-4 h-4 text-[#C9A227] mt-0.5 flex-shrink-0" />
+              <span className="text-blanc/70 text-xs leading-relaxed">
+                {TRAINING_INFO.location}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.95 }}
+          className="mt-6 space-y-3"
+        >
+          {whatsappLink && (
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shine-sweep relative overflow-hidden w-full inline-flex items-center justify-center gap-2 h-14 rounded-xl bg-[#25D366] text-white font-bold text-base hover:bg-[#1DA851] active:scale-[0.98] transition-all shadow-[0_8px_24px_rgba(37,211,102,0.3)]"
+            >
+              <WhatsAppIcon size={20} className="text-white" />
+              Voir sur WhatsApp
+            </a>
+          )}
+
+          <button
+            onClick={onBackHome}
+            className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl border border-[#C9A227]/30 text-blanc/70 text-sm font-semibold hover:bg-blanc/5 hover:text-blanc transition-all"
+          >
+            <Home className="w-4 h-4" />
+            Retour à l'accueil
+          </button>
+        </motion.div>
+
+        {/* Help text */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+          className="text-center text-[11px] text-blanc/40 mt-6 leading-relaxed"
+        >
+          Conservez précieusement votre numéro d'inscription. Pour toute
+          question, contactez-nous au {TRAINING_INFO.contactPhone} ou par email à{" "}
+          {TRAINING_INFO.contactEmail}.
+        </motion.p>
+
+        {/* Reset button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          onClick={onBackHome}
+          className="mx-auto mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#C9A227]/30 text-[#C9A227] text-sm font-semibold hover:bg-[#C9A227]/10 transition-all"
+        >
+          <RotateCcw className="w-4 h-4" />
+          Nouvelle inscription
+        </motion.button>
       </div>
     </section>
   );
