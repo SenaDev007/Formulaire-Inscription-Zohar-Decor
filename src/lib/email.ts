@@ -25,6 +25,9 @@ export const TRAINING_INFO = {
   fullFee: 25000,
   contactPhone: process.env.CONTACT_PHONE || "+22900000000",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
+  whatsappGroupLink:
+    process.env.WHATSAPP_GROUP_LINK ||
+    "https://chat.whatsapp.com/VOTRE-LIEN-GROUPE",
   slogan: "Des souvenirs qui brillent à jamais",
 };
 
@@ -119,6 +122,19 @@ export function buildConfirmationEmailHtml({
               <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Durée :</strong> ${TRAINING_INFO.duration}</p>
               <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Lieu :</strong> ${TRAINING_INFO.location}</p>
               <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Attestation :</strong> Attestation de participation incluse.</p>
+
+              <div style="margin:24px 0;padding:20px;background:#25D366;border-radius:8px;color:#FFFFFF;text-align:center;">
+                <p style="margin:0 0 4px;font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:0.9;">Étape suivante</p>
+                <p style="margin:0 0 12px;font-size:16px;font-weight:700;">Rejoignez le groupe WhatsApp des participants</p>
+                <p style="margin:0 0 14px;font-size:13px;opacity:0.95;line-height:1.5;">
+                  Échangez avec les autres participants, recevez les annonces importantes
+                  et le lien Zoom / Google Meet de la formation.
+                </p>
+                <a href="${TRAINING_INFO.whatsappGroupLink}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background:#FFFFFF;color:#25D366;padding:12px 28px;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none;">
+                  Rejoindre le groupe WhatsApp
+                </a>
+              </div>
 
               <div style="margin:28px 0;padding:20px;background:#111111;border-radius:8px;color:#F8F6F2;">
                 <p style="margin:0 0 4px;font-size:12px;letter-spacing:1px;color:#C9A227;text-transform:uppercase;">Contact Zohar Décor</p>
@@ -344,7 +360,17 @@ export function buildAdminNotificationHtml(
                 </tr>
               </table>
 
-              <div style="margin-top:20px;padding:14px;background:#111111;border-radius:8px;text-align:center;">
+              <div style="margin-top:20px;padding:14px;background:#25D366;border-radius:8px;text-align:center;">
+                <p style="margin:0;font-size:12px;color:#FFFFFF;text-transform:uppercase;letter-spacing:1px;">Lien groupe WhatsApp participants</p>
+                <p style="margin:6px 0 4px;font-size:13px;color:#FFFFFF;font-family:monospace;word-break:break-all;">
+                  ${TRAINING_INFO.whatsappGroupLink}
+                </p>
+                <p style="margin:4px 0 0;font-size:11px;color:#FFFFFF;opacity:0.85;">
+                  Partagé avec le participant dans son email de confirmation
+                </p>
+              </div>
+
+              <div style="margin-top:14px;padding:14px;background:#111111;border-radius:8px;text-align:center;">
                 <p style="margin:0;font-size:12px;color:#C9A227;text-transform:uppercase;letter-spacing:1px;">Dashboard admin</p>
                 <p style="margin:4px 0 0;font-size:13px;color:#F8F6F2;">
                   Connectez-vous à <strong>/#admin</strong> pour gérer les inscrits

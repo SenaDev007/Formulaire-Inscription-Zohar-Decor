@@ -30,18 +30,23 @@ export function buildWhatsAppLink(phone: string, message: string): string {
 export function buildConfirmationWhatsAppMessage(p: Participant): string {
   return `Bonjour ${p.prenoms},
 
-Votre inscription à la Formation en Résine Époxy de Zohar Décor a été validée.
+✅ Votre inscription à la Formation en Résine Époxy de Zohar Décor a été validée.
 
-Numéro d'inscription :
+📋 Numéro d'inscription :
 ${p.registrationId}
 
-Dates :
+📅 Dates :
 ${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year}
 
-Lieu :
+📍 Lieu :
 ${TRAINING_INFO.location}
 
-Nous avons bien reçu votre paiement.
+💰 Nous avons bien reçu votre paiement.
+
+👥 Rejoignez le groupe WhatsApp des participants :
+${TRAINING_INFO.whatsappGroupLink}
+
+Échangez avec les autres participants et recevez toutes les annonces importantes.
 
 À très bientôt.
 

@@ -407,6 +407,41 @@ export function ConfirmationSection({
           </div>
         </motion.div>
 
+        {/* WhatsApp Group CTA — highlighted */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="mt-4 bg-gradient-to-br from-[#25D366]/20 to-[#1A1A1A] border border-[#25D366]/40 rounded-2xl p-5"
+        >
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-[#25D366]/20 border border-[#25D366]/40 flex items-center justify-center flex-shrink-0">
+              <WhatsAppIcon size={20} className="text-[#25D366]" />
+            </div>
+            <div>
+              <p className="text-[#25D366] text-[10px] font-semibold uppercase tracking-wider mb-1">
+                Étape suivante
+              </p>
+              <p className="text-blanc font-bold text-sm leading-tight">
+                Rejoignez le groupe WhatsApp des participants
+              </p>
+            </div>
+          </div>
+          <p className="text-blanc/60 text-[11px] leading-relaxed mb-3">
+            Échangez avec les autres participants, recevez les annonces importantes
+            et le lien de la formation.
+          </p>
+          <a
+            href={TRAINING_INFO.whatsappGroupLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shine-sweep relative overflow-hidden w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-[#25D366] text-white font-bold text-sm hover:bg-[#1DA851] active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(37,211,102,0.3)]"
+          >
+            <WhatsAppIcon size={18} className="text-white" />
+            Rejoindre le groupe
+          </a>
+        </motion.div>
+
         {/* Actions */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -419,10 +454,10 @@ export function ConfirmationSection({
               href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="shine-sweep relative overflow-hidden w-full inline-flex items-center justify-center gap-2 h-14 rounded-xl bg-[#25D366] text-white font-bold text-base hover:bg-[#1DA851] active:scale-[0.98] transition-all shadow-[0_8px_24px_rgba(37,211,102,0.3)]"
+              className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl border border-[#25D366]/40 text-[#25D366] text-sm font-semibold hover:bg-[#25D366]/10 transition-all"
             >
-              <WhatsAppIcon size={20} className="text-white" />
-              Voir sur WhatsApp
+              <WhatsAppIcon size={18} className="text-[#25D366]" />
+              Confirmation WhatsApp à Zohar Décor
             </a>
           )}
 
