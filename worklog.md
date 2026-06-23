@@ -580,3 +580,41 @@ Stage Summary:
 - Official WhatsApp icon, real phone number, QR code in email — all done
 - Pushed to GitHub commit 2b3ba8e on main branch (after rebase)
 - 5 files changed, 48 insertions, 10 deletions + 1 new image (qr-whatsapp-group.jpeg)
+
+---
+Task ID: 12
+Agent: main (Super Z)
+Task: Replace the current logo with 'logo zohar decor.png' from the GitHub repo /public folder, across the entire site including emails.
+
+Work Log:
+- Downloaded 'logo zohar decor.png' from GitHub repo (582x600, 170KB, RGBA)
+- Replaced /public/logo_zohar_decor.png content with the new logo
+  (kept the same filename so all 7 existing references work automatically)
+- Also updated /public/favicon.png with the same image
+- Existing logo references (no code changes needed):
+  - Header.tsx, Footer.tsx, RegistrationForm.tsx, PaymentSection.tsx,
+    AdminSection.tsx, layout.tsx (metadata + openGraph)
+- Added logo to 3 email templates:
+  1. buildConfirmationEmailHtml (participant email):
+     72x72 logo on white circle with gold border, above 'ZOHAR DÉCOR' text
+  2. buildAdminNotificationHtml (admin notification):
+     56x56 logo on white circle with white border, above 'ZOHAR DÉCOR — ADMIN'
+  3. bulk-email route (admin collective email):
+     64x64 logo on white circle with gold border, above 'ZOHAR DÉCOR' text
+- New exported constant LOGO_URL in lib/email.ts:
+  = NEXT_PUBLIC_APP_URL + '/logo_zohar_decor.png'
+  (public absolute URL for email clients to load the image)
+- All logos use consistent style: rounded-full, border, white bg, padding
+
+Verification:
+- Logo served HTTP 200 (170KB = new logo) ✅
+- VLM confirmed header: logo visible on white circle, professional ✅
+- Email HTML tested: both confirmation + admin templates contain
+  logo_zohar_decor.png + <img> tag ✅
+- Lint: 0 errors
+
+Stage Summary:
+- New logo deployed across entire site (header, footer, hero, register, payment,
+  admin, favicon, openGraph) + all 3 email templates
+- Pushed to GitHub commit 435dbbc on main branch
+- 4 files changed, 14 insertions, 1 deletion
