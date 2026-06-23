@@ -212,3 +212,76 @@ Stage Summary:
 - 11 files modified, 3 real logo images added
 - Lint: 0 errors
 - All 3 real logos serve HTTP 200
+
+---
+Task ID: 5
+Agent: main (Super Z)
+Task: Redesign the registration page to follow the SERMA-HUB style (multi-step form, two-column layout, dark premium theme). Reference: github.com/SenaDev007/Inscription-Formation-Gratuite-SERMA-HUB
+
+Work Log:
+- Fetched and studied the SERMA-HUB source code:
+  - app/page.tsx (two-column layout: left branding sticky, right form card)
+  - components/MultiStepForm.tsx (5-step form with slide animations)
+  - components/StepIndicator.tsx (animated progress with circles + line)
+  - components/FormFields.tsx (custom dark Input/Select/RadioGroup/Checkbox)
+  - components/SuccessScreen.tsx (confetti + payment CTA)
+  - lib/validations.ts (per-step zod schemas)
+  - tailwind.config.ts + globals.css (navy/orange/green theme)
+- Adapted the SERMA-HUB design language to Zohar Décor's gold/noir palette:
+  - bg-navy #080e20 → bg-noir #111111
+  - bg-navy-light #0d1530 → bg-[#1A1A1A]
+  - orange #F59B1E → gold #C9A227
+  - green-serma #2BA96B → gold-soft #D4AF37
+  - white text → blanc #F8F6F2
+  - font-syne → var(--font-playfair)
+- Created 3 new components in src/components/site/register/:
+  1. StepIndicator.tsx:
+     - 4 step circles with animated progress line
+     - Completed = Check icon (gold), Active = number with glow shadow
+     - Progress line animates width (500ms easeInOut)
+     - Mobile fallback: 'Étape X/4 — label'
+  2. FormFields.tsx:
+     - Label (uppercase tracking, gold asterisk for required)
+     - FieldWrapper (AlertCircle error display)
+     - Input (bg-noir, gold focus border + ring, 44px min height)
+     - Textarea (same, min-h-120px)
+     - Select (native, dark dropdown options)
+     - RadioGroup (pill buttons with gold radio dots, 44px min height)
+     - Checkbox (gold check on gold bg, 44px min height)
+  3. MultiStepRegistrationForm.tsx:
+     - 4 steps with independent useForm + zodResolver per step
+     - Step 1: Identité (nomComplet, prenoms, sexe, dateNaissance)
+     - Step 2: Contact (telWhatsApp, telSecondaire, email, ville)
+     - Step 3: Profil pro (profession, niveauEtudes)
+     - Step 4: Finalisation (sourceConnaissance, acceptConditions)
+     - slideVariants: x: ±48px, opacity, 300ms easeInOut
+     - Persistent data state across steps (merge on each step submit)
+     - Honeypot anti-spam field preserved
+     - Navigation: Retour button (steps 2-4) + Continuer/Valider gold button
+- Rewrote RegistrationForm.tsx as two-column layout:
+  - LEFT (sticky on desktop): logo on white circle, ZOHAR DÉCOR branding,
+    'Inscriptions ouvertes' pulse badge, 4 info cards (Dates/Durée/Inscription/
+    Places), 'Ce que vous apprendrez à créer' list (6 items), location card,
+    attestation card, contact quick links
+  - RIGHT: multi-step form card (bg-[#1A1A1A], gold border, deep shadow)
+  - Footer: copyright + slogan
+- Per-step zod validation schemas (step1Schema through step4Schema) defined
+  inline in MultiStepRegistrationForm.tsx
+- The existing /api/register endpoint is unchanged — the multi-step form
+  merges all step data and submits as a single POST at the final step
+
+VLM Verification:
+- Similarity rating with SERMA-HUB style: 8/10
+- Confirmed: dark background, two-column layout, step indicator (1-4),
+  gold accent color, professional modern aesthetic
+- All expected elements verified present via JS evaluation:
+  two-column layout ✓, step indicator (9 circles) ✓, logo on white circle ✓,
+  Continuer button ✓, ZOHAR branding ✓, Inscriptions ouvertes badge ✓,
+  10 max places ✓, contact email ✓, Identité step label ✓
+
+Stage Summary:
+- Registration page completely redesigned to match SERMA-HUB style
+- 3 new components, 1 rewritten component
+- Pushed to GitHub commit adb931a on main branch
+- Lint: 0 errors
+- API registration verified working (ZD-2026-003 created in test)
