@@ -335,3 +335,61 @@ Stage Summary:
 - Confetti animation on confirmation success (matching SERMA-HUB SuccessScreen)
 - Full flow verified: registration → payment → email → confirmation
 - Pushed to GitHub commit ed42858 on main branch
+
+---
+Task ID: 7
+Agent: main (Super Z)
+Task: User configured RESEND_API_KEY and RESEND_TO_EMAIL. Add admin notification support so the admin receives an email at RESEND_TO_EMAIL when someone registers or pays.
+
+Work Log:
+- Discovered RESEND_TO_EMAIL was not supported in our codebase (only RESEND_API_KEY
+  + EMAIL_FROM_NOREPLY were used). The user referenced the SERMA-HUB naming
+  convention which uses RESEND_TO_EMAIL as the destination for form submissions.
+- Added RESEND_TO_EMAIL support to src/lib/email.ts:
+  - New const: adminNotifyEmail = process.env.RESEND_TO_EMAIL
+  - New type: AdminNotificationType = "NEW_REGISTRATION" | "PAYMENT_CONFIRMED"
+  - New function: buildAdminNotificationHtml(type, participant, payment)
+    - Premium HTML template with gold header (registration) or green header (payment)
+    - Large registration ID card
+    - Full participant details table (12 fields: name, sexe, DOB, phones, email,
+      ville, profession, niveau, source, statut)
+    - Payment details when applicable (type, amount, provider, transaction ref)
+    - '/#admin' CTA at bottom
+    - Brand footer
+  - New function: sendAdminNotification(type, participant, payment)
+    - Sends to RESEND_TO_EMAIL (or CONTACT_EMAIL fallback)
+    - reply-to: participant.email (admin can reply directly to customer)
+    - Graceful error handling + logging
+- Wired admin notifications into 4 API endpoints:
+  1. POST /api/register → NEW_REGISTRATION notification
+  2. POST /api/payment/webhook → PAYMENT_CONFIRMED notification (FeeXPay webhook)
+  3. GET /api/payment/demo-confirm → PAYMENT_CONFIRMED notification (demo mode)
+  4. POST /api/admin/validate-payment → PAYMENT_CONFIRMED notification (manual)
+- Updated .env and .env.example with RESEND_TO_EMAIL='auroretheodoraa@gmail.com'
+- Also fixed: webhook + demo-confirm now reload the participant after status
+  update to get the fresh status for the email templates (previously the email
+  showed the old PENDING status instead of PAID_FULL/PAID_INSCRIPTION)
+
+Verification (local test, RESEND_API_KEY not set):
+- Registration ZD-2026-005 created ✅
+- Admin notification triggered (logged):
+  '[email] RESEND_API_KEY not set — admin notification not sent to:
+   auroretheodoraa@gmail.com' ✅
+- Payment confirmation:
+  - Customer email triggered:
+    'Confirmation d'inscription — ZD-2026-005 — Zohar Décor' ✅
+  - Admin notification triggered:
+    'admin notification not sent to: auroretheodoraa@gmail.com' ✅
+- On Vercel (with RESEND_API_KEY configured by user), all emails will be sent
+
+Email flow summary (end-to-end):
+1. Customer registers → admin gets '📋 Nouvelle inscription' email
+2. Customer pays → customer gets confirmation email with receipt
+3. Customer pays → admin gets '💰 Paiement confirmé' email
+4. Admin manually validates → customer gets confirmation + admin gets notification
+
+Stage Summary:
+- RESEND_TO_EMAIL admin notification system complete
+- Pushed to GitHub commit 48533cc on main branch
+- Vercel will auto-deploy with user's configured RESEND_API_KEY + RESEND_TO_EMAIL
+- 6 files modified, 274 insertions, 18 deletions
