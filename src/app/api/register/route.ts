@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { TRAINING_INFO, nextRegistrationId, sendAdminNotification } from "@/lib/email";
+import {
+  TRAINING_INFO,
+  nextRegistrationId,
+  sendAdminNotification,
+  sendRegistrationConfirmationEmail,
+} from "@/lib/email";
 
 const schema = z.object({
   nomComplet: z.string().min(2, "Nom complet requis"),
@@ -94,9 +99,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Fire-and-forget admin notification
+    // Fire-and-forget: admin notification (email 1 → auroretheodoraa@gmail.com)
     sendAdminNotification("NEW_REGISTRATION", participant).catch((e) =>
       console.error("[register] admin notification error:", e?.message || e)
+    );
+
+    // Fire-and-forget: participant confirmation (email 2 → participant's email)
+    sendRegistrationConfirmationEmail(participant.email, participant).catch((e) =>
+      console.error("[register] participant email error:", e?.message || e)
     );
 
     return NextResponse.json({ success: true, participant });

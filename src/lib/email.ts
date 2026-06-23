@@ -186,6 +186,151 @@ export function buildConfirmationEmailHtml({
 `;
 }
 
+// ============================================================
+// REGISTRATION CONFIRMATION EMAIL (sent to participant at
+// registration time, BEFORE payment)
+// Contains: registration confirmation, registration ID, training
+// address, next steps (payment), WhatsApp group link + QR code
+// ============================================================
+
+export function buildRegistrationConfirmationHtml({
+  participant,
+}: {
+  participant: Participant;
+}): string {
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Confirmation d'inscription — Zohar Décor</title>
+</head>
+<body style="margin:0;padding:0;background:#F8F6F2;font-family:Helvetica,Arial,sans-serif;color:#111111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F6F2;min-width:100%;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #EFE8DD;border-radius:12px;overflow:hidden;">
+          <tr style="background:#111111;">
+            <td align="center" style="padding:32px 24px;color:#C9A227;">
+              <img src="${LOGO_URL}" alt="Zohar Décor"
+                   width="72" height="72"
+                   style="width:72px;height:72px;border-radius:50%;border:2px solid #C9A227;background:#F8F6F2;padding:4px;margin-bottom:12px;display:block;" />
+              <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:1px;">ZOHAR DÉCOR</h1>
+              <p style="margin:6px 0 0;color:#F8F6F2;font-size:13px;letter-spacing:2px;text-transform:uppercase;">${TRAINING_INFO.slogan}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px;">
+              <h2 style="margin:0 0 8px;color:#111111;font-size:20px;">Bonjour ${participant.prenoms} !</h2>
+              <p style="margin:0 0 16px;color:#444;font-size:15px;line-height:1.6;">
+                Nous avons bien reçu votre inscription à la <strong>Formation Professionnelle en Résine Époxy</strong>.
+                Votre dossier a été enregistré avec succès.
+              </p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EFE8DD;border-radius:8px;margin:20px 0;">
+                <tr><td style="padding:20px;text-align:center;">
+                  <p style="margin:0 0 6px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Votre numéro d'inscription</p>
+                  <p style="margin:0;font-size:26px;font-weight:700;color:#C9A227;letter-spacing:2px;">${participant.registrationId}</p>
+                </td></tr>
+              </table>
+
+              <h3 style="margin:24px 0 8px;color:#111;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Prochaine étape : le paiement</h3>
+              <p style="margin:0 0 6px;color:#444;font-size:14px;line-height:1.6;">
+                Pour confirmer définitivement votre place, veuillez procéder au paiement de vos frais d'inscription :
+              </p>
+              <ul style="margin:8px 0 16px 20px;padding:0;color:#444;font-size:14px;line-height:1.8;">
+                <li><strong>Inscription :</strong> 5 000 FCFA (réserve votre place)</li>
+                <li><strong>Formation complète :</strong> 25 000 FCFA (3 jours inclus)</li>
+              </ul>
+              <p style="margin:0 0 16px;color:#444;font-size:14px;line-height:1.6;">
+                Paiement via FeeXPay : MTN MoMo, Moov Money, Celtiis Cash, carte bancaire.
+              </p>
+
+              <h3 style="margin:24px 0 8px;color:#111;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Détails de la formation</h3>
+              <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Dates :</strong> ${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year}</p>
+              <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Durée :</strong> ${TRAINING_INFO.duration}</p>
+              <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Lieu :</strong> ${TRAINING_INFO.location}</p>
+              <p style="margin:0 0 6px;color:#444;font-size:14px;"><strong>Attestation :</strong> Attestation de participation incluse.</p>
+
+              <div style="margin:24px 0;padding:20px;background:#25D366;border-radius:8px;color:#FFFFFF;text-align:center;">
+                <p style="margin:0 0 4px;font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:0.9;">Rejoignez le groupe WhatsApp</p>
+                <p style="margin:0 0 12px;font-size:16px;font-weight:700;">Groupe des participants</p>
+                <p style="margin:0 0 14px;font-size:13px;opacity:0.95;line-height:1.5;">
+                  Échangez avec les autres participants, recevez les annonces importantes
+                  et le lien de la formation.
+                </p>
+
+                <div style="background:#FFFFFF;border-radius:12px;padding:16px;display:inline-block;margin:0 auto 14px;">
+                  <img src="${WHATSAPP_QR_URL}" alt="QR Code groupe WhatsApp Zohar Décor"
+                       width="180" height="180"
+                       style="display:block;margin:0 auto;border-radius:8px;" />
+                  <p style="margin:10px 0 0;font-size:11px;color:#666;text-align:center;">
+                    Scannez ce QR code avec votre téléphone<br/>pour rejoindre le groupe
+                  </p>
+                </div>
+
+                <br/>
+                <a href="${TRAINING_INFO.whatsappGroupLink}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background:#FFFFFF;color:#25D366;padding:12px 28px;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none;">
+                  Rejoindre le groupe WhatsApp
+                </a>
+              </div>
+
+              <div style="margin:28px 0;padding:20px;background:#111111;border-radius:8px;color:#F8F6F2;">
+                <p style="margin:0 0 4px;font-size:12px;letter-spacing:1px;color:#C9A227;text-transform:uppercase;">Contact Zohar Décor</p>
+                <p style="margin:0;font-size:14px;">Téléphone : ${TRAINING_INFO.contactPhone}<br/>Email : ${TRAINING_INFO.contactEmail}</p>
+              </div>
+
+              <p style="margin:0;color:#888;font-size:12px;text-align:center;border-top:1px solid #EFE8DD;padding-top:16px;">
+                Zohar Décor — ${TRAINING_INFO.slogan}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+}
+
+export async function sendRegistrationConfirmationEmail(
+  to: string,
+  participant: Participant
+): Promise<{ success: boolean; error?: string }> {
+  const html = buildRegistrationConfirmationHtml({ participant });
+  const subject = `Inscription reçue — ${participant.registrationId} — Zohar Décor`;
+
+  if (!resend) {
+    console.warn(
+      "[email] RESEND_API_KEY not set — registration email not sent. Recipient:",
+      to,
+      "Subject:",
+      subject
+    );
+    return { success: false, error: "RESEND_API_KEY not configured" };
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: fromAddress,
+      to,
+      subject,
+      html,
+    });
+    if (error) {
+      console.error("[email] Resend error:", error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[email] send error:", msg);
+    return { success: false, error: msg };
+  }
+}
+
 export async function sendConfirmationEmail(
   to: string,
   data: ConfirmationEmailData
