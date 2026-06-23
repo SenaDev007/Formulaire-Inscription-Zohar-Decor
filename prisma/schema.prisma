@@ -1,30 +1,25 @@
 // Zohar Décor - Formation Résine Époxy
 // Prisma schema
 //
-// For LOCAL DEV: provider = "sqlite" (zero setup)
-// For VERCEL / PRODUCTION: change provider to "postgresql" and set
-// DATABASE_URL to your Vercel Postgres / Supabase / Neon connection string.
-// See README.md → "Déploiement en production" for the full migration guide.
+// IMPORTANT: For production (Vercel), change provider to "postgresql"
+// For local dev, keep "sqlite"
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  // DEV:
   provider = "sqlite"
-  // PROD (Vercel): uncomment the next line, comment the one above
-  // provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Participant {
   id                  String     @id @default(cuid())
-  registrationId      String     @unique // e.g. ZD-2026-001
+  registrationId      String     @unique
   nomComplet          String
   prenoms             String
-  sexe                String     // "M" | "F"
-  dateNaissance       String     // ISO date string
+  sexe                String
+  dateNaissance       String
   telWhatsApp         String
   telSecondaire       String?
   email               String
@@ -33,8 +28,8 @@ model Participant {
   niveauEtudes        String
   sourceConnaissance  String
   acceptConditions    Boolean    @default(false)
-  status              String     @default("PENDING") // PENDING | PAID_INSCRIPTION | PAID_FULL | VALIDATED | CANCELLED
-  paymentType         String?    // "INSCRIPTION" | "COMPLET"
+  status              String     @default("PENDING")
+  paymentType         String?
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
@@ -50,17 +45,17 @@ model Payment {
   id                  String     @id @default(cuid())
   participantId       String
   participant         Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  amount              Int        // in FCFA
-  type                String     // "INSCRIPTION" (5000) | "COMPLET" (25000)
-  provider            String     // "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD"
+  amount              Int
+  type                String
+  provider            String
   providerPhone       String?
-  feexpayReference    String?    @unique // FeeXPay reference (MoMo) or transref (card)
-  feexpayOrderNumber  String?    // alias kept for backward compat with admin UI
-  feexpayTransaction  String?    // final confirmed transaction id
-  status              String     @default("PENDING") // PENDING | SUCCESS | FAILED | CANCELLED
-  paymentUrl          String?    // URL the user is redirected to (card only)
+  feexpayReference    String?    @unique
+  feexpayOrderNumber  String?
+  feexpayTransaction  String?
+  status              String     @default("PENDING")
+  paymentUrl          String?
   manuallyValidated   Boolean    @default(false)
-  validatedById       String?    // AdminUser id, if manually validated
+  validatedById       String?
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
@@ -74,7 +69,7 @@ model AdminUser {
   email               String     @unique
   name                String
   passwordHash        String
-  role                String     @default("ADMIN") // ADMIN | SUPER_ADMIN
+  role                String     @default("ADMIN")
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 }

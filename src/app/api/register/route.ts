@@ -112,9 +112,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, participant });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error("[register] error:", msg);
+    console.error("[register] error:", msg, e);
+
+    // Return a more helpful error message
+    let userMessage = "Erreur serveur. Réessayez.";
+    if (msg.includes("no such column") || msg.includes("does not exist")) {
+      userMessage =
+        "Erreur de base de données. L'administrateur doit exécuter la migration Prisma (db:push).";
+    } else if (msg.includes("connect") || msg.includes("ECONNREFUSED")) {
+      userMessage = "Impossible de se connecter à la base de données.";
+    } else if (msg.includes("unique constraint")) {
+      userMessage =
+        "Un inscrit avec cet email ou ce téléphone existe déjà.";
+    }
+
     return NextResponse.json(
-      { success: false, error: "Erreur serveur. Réessayez." },
+      { success: false, error: userMessage, debug: msg },
       { status: 500 }
     );
   }

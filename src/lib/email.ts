@@ -34,6 +34,7 @@ export const TRAINING_INFO = {
   capacity: 10,
   inscriptionFee: 5000,
   trainingFee: 20000,
+  attestation: "Attestation de participation incluse.",
   contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "2290162597692",
