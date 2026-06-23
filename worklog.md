@@ -393,3 +393,50 @@ Stage Summary:
 - Pushed to GitHub commit 48533cc on main branch
 - Vercel will auto-deploy with user's configured RESEND_API_KEY + RESEND_TO_EMAIL
 - 6 files modified, 274 insertions, 18 deletions
+
+---
+Task ID: 8
+Agent: main (Super Z)
+Task: Send WhatsApp group join link to participant via both email and WhatsApp message after payment confirmation.
+
+Work Log:
+- Added WHATSAPP_GROUP_LINK env var to .env + .env.example
+  - Default placeholder: https://chat.whatsapp.com/VOTRE-LIEN-GROUPE
+  - User will replace with actual group invite link in Vercel
+- Added whatsappGroupLink to TRAINING_INFO constant in lib/email.ts
+- Updated confirmation email HTML template (buildConfirmationEmailHtml):
+  - Added green WhatsApp section (#25D366) after 'Détails de la formation'
+  - 'Étape suivante' label + 'Rejoignez le groupe WhatsApp des participants' headline
+  - Description + large white 'Rejoindre le groupe WhatsApp' button
+  - Button links to TRAINING_INFO.whatsappGroupLink
+- Updated WhatsApp confirmation message (buildConfirmationWhatsAppMessage):
+  - Added emojis (✅📋📅📍💰👥) for visual hierarchy
+  - Added '👥 Rejoignez le groupe WhatsApp des participants:' section with group link
+  - Added description: 'Échangez avec les autres participants et recevez toutes
+    les annonces importantes.'
+- Updated admin notification email to include a green WhatsApp section
+  showing the group link for admin reference (with note 'Partagé avec le
+  participant dans son email de confirmation')
+- Updated ConfirmationSection.tsx (confirmation page UI):
+  - Added a highlighted 'Rejoignez le groupe WhatsApp des participants' card
+    with green gradient background, WhatsApp icon, and 'Rejoindre le groupe'
+    button linking to TRAINING_INFO.whatsappGroupLink
+  - Renamed existing 'Voir sur WhatsApp' to 'Confirmation WhatsApp à Zohar
+    Décor' (now a secondary outline button — the primary action is joining
+    the group, not just sending a confirmation message to admin)
+
+Verification (local test):
+- Registration ZD-2026-006 created ✅
+- WhatsApp confirmation link fetched — message includes:
+  '👥 Rejoignez le groupe WhatsApp des participants:
+   https://chat.whatsapp.com/VOTRE-LIEN-GROUPE' ✅
+- Payment confirmation triggered:
+  - Customer email triggered (subject: 'Confirmation d'inscription — ZD-2026-006')
+    — HTML template includes WhatsApp group green section ✅
+  - Admin notification triggered ✅
+
+Stage Summary:
+- WhatsApp group link is now sent to participant via both email and WhatsApp
+- Pushed to GitHub commit 58d0acb on main branch
+- Vercel will auto-deploy with WHATSAPP_GROUP_LINK once user sets it in env vars
+- 4 files modified, 77 insertions, 9 deletions
