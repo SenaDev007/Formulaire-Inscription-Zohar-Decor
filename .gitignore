@@ -49,3 +49,4 @@ yarn-error.log*
 *.log
 dev.log
 server.log
+tool-results/
