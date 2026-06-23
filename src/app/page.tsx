@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/site/Header";
 import { Hero } from "@/components/site/Hero";
-import { TrainingInfo } from "@/components/site/TrainingInfo";
 import { Creations } from "@/components/site/Creations";
 import { Pricing } from "@/components/site/Pricing";
 import { FAQ } from "@/components/site/FAQ";
@@ -124,7 +123,6 @@ export default function Home() {
             {view === "home" && (
               <>
                 <Hero onRegister={() => navigate("register")} />
-                <TrainingInfo />
                 <Creations />
                 <Pricing onRegister={() => navigate("register")} />
                 <FAQ />

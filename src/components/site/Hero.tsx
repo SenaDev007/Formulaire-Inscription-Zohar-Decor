@@ -1,13 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Calendar, Users, MapPin, ArrowRight } from "lucide-react";
+import {
+  Sparkles,
+  Calendar,
+  Users,
+  MapPin,
+  Award,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TRAINING_INFO } from "@/lib/email";
 
+const LEARN_ITEMS = [
+  "Techniques de coulage et démoulage",
+  "Coloration et inclusion d'éléments",
+  "Finitions professionnelles",
+  "Stratégies de vente et marketing",
+];
+
 export function Hero({ onRegister }: { onRegister: () => void }) {
   return (
-    <section className="relative overflow-hidden bg-noir text-blanc">
+    <section id="formation" className="relative overflow-hidden bg-noir text-blanc">
       {/* Background image with dark overlay */}
       <div className="absolute inset-0">
         <img
@@ -78,10 +94,10 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <a
-                href="#formation"
+                href="#creations"
                 className="inline-flex items-center justify-center h-14 px-8 rounded-full border border-blanc/30 text-blanc hover:bg-blanc/10 backdrop-blur-sm transition-all text-base font-medium"
               >
-                Voir le programme
+                Voir les créations
               </a>
             </motion.div>
 
@@ -97,7 +113,7 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
             </motion.p>
           </div>
 
-          {/* Right: glass card with training details */}
+          {/* Right: comprehensive program card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -105,51 +121,92 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
             className="relative"
           >
             <div className="relative rounded-3xl overflow-hidden premium-shadow-xl backdrop-blur-md bg-blanc/10 border border-blanc/20 p-1">
-              <div className="rounded-[20px] bg-noir/60 backdrop-blur-lg p-6 sm:p-8">
-                <p className="text-xs uppercase tracking-[0.3em] text-[#C9A227] mb-6">
+              <div className="rounded-[20px] bg-noir/60 backdrop-blur-lg p-5 sm:p-7">
+                <p className="text-xs uppercase tracking-[0.3em] text-[#C9A227] mb-5 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5" />
                   La formation en bref
                 </p>
 
-                <div className="space-y-5">
+                {/* Detail rows */}
+                <div className="space-y-4">
                   <DetailRow
                     icon={<Calendar className="w-5 h-5" />}
                     label="Dates"
-                    value={`09 — 11 juillet 2026`}
-                    sub="3 jours intensifs"
+                    value="09 — 11 juillet 2026"
+                    sub="Jeu · Ven · Sam"
                   />
-                  <div className="h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent" />
+                  <Divider />
+                  <DetailRow
+                    icon={<Clock className="w-5 h-5" />}
+                    label="Durée"
+                    value="3 jours intensifs"
+                    sub="Pratique + théorie"
+                  />
+                  <Divider />
                   <DetailRow
                     icon={<MapPin className="w-5 h-5" />}
                     label="Lieu"
                     value="Zongo 2, Cotonou"
-                    sub="Bénin"
+                    sub={TRAINING_INFO.location}
+                    long
                   />
-                  <div className="h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent" />
+                  <Divider />
                   <DetailRow
                     icon={<Users className="w-5 h-5" />}
                     label="Places"
                     value="10 seulement"
                     sub="Pour un suivi personnalisé"
                   />
+                  <Divider />
+                  <DetailRow
+                    icon={<Award className="w-5 h-5" />}
+                    label="Attestation"
+                    value="Incluse"
+                    sub="À la fin du parcours"
+                  />
                 </div>
 
                 {/* Price tags */}
-                <div className="mt-8 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-blanc/5 border border-blanc/10 p-4 text-center">
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-blanc/5 border border-blanc/10 p-3 sm:p-4 text-center">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50 mb-1">
                       Inscription
                     </p>
-                    <p className="text-2xl font-bold gold-text-gradient">
+                    <p className="text-xl sm:text-2xl font-bold gold-text-gradient">
                       5 000
                     </p>
                     <p className="text-[10px] text-blanc/60">FCFA</p>
                   </div>
-                  <div className="rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/40 p-4 text-center">
+                  <div className="rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/40 p-3 sm:p-4 text-center">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-[#C9A227] mb-1">
                       Complète
                     </p>
-                    <p className="text-2xl font-bold text-blanc">25 000</p>
-                    <p className="text-[10px] text-blanc/60">FCFA</p>
+                    <p className="text-xl sm:text-2xl font-bold text-blanc">25 000</p>
+                    <p className="text-[10px] text-blanc/60">FCFA · 3 jours inclus</p>
+                  </div>
+                </div>
+
+                {/* What you'll learn */}
+                <div className="mt-6">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#C9A227] font-semibold mb-3 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Ce que vous apprendrez
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {LEARN_ITEMS.map((item) => (
+                      <div
+                        key={item}
+                        className="flex items-start gap-2 bg-blanc/5 rounded-lg p-2.5 border border-blanc/[0.06]"
+                      >
+                        <CheckCircle2
+                          className="w-3.5 h-3.5 text-[#C9A227] flex-shrink-0 mt-0.5"
+                          strokeWidth={2.5}
+                        />
+                        <span className="text-[11px] text-blanc/80 leading-snug">
+                          {item}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -189,16 +246,24 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
   );
 }
 
+function Divider() {
+  return (
+    <div className="h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent" />
+  );
+}
+
 function DetailRow({
   icon,
   label,
   value,
   sub,
+  long = false,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   sub: string;
+  long?: boolean;
 }) {
   return (
     <div className="flex items-start gap-4">
@@ -209,10 +274,16 @@ function DetailRow({
         <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50">
           {label}
         </p>
-        <p className="text-base font-semibold text-blanc leading-tight mt-0.5">
+        <p className="text-sm sm:text-base font-semibold text-blanc leading-tight mt-0.5">
           {value}
         </p>
-        <p className="text-xs text-blanc/60 mt-0.5">{sub}</p>
+        <p
+          className={`text-xs text-blanc/60 mt-0.5 ${
+            long ? "leading-relaxed" : ""
+          }`}
+        >
+          {sub}
+        </p>
       </div>
     </div>
   );

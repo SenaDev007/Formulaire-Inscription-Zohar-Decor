@@ -53,11 +53,6 @@ export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
                 </button>
               </li>
               <li>
-                <a href="#formation" className="hover:text-[#C9A227] transition-colors">
-                  Programme
-                </a>
-              </li>
-              <li>
                 <a href="#creations" className="hover:text-[#C9A227] transition-colors">
                   Créations
                 </a>

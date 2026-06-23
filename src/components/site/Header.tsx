@@ -73,7 +73,6 @@ export function Header({
           <nav className="hidden md:flex items-center gap-1">
             {[
               { label: "Accueil", action: goHome },
-              { label: "Formation", href: "#formation" },
               { label: "Créations", href: "#creations" },
               { label: "Tarifs", href: "#tarifs" },
               { label: "FAQ", href: "#faq" },
@@ -137,13 +136,6 @@ export function Header({
               >
                 Accueil
               </button>
-              <a
-                href="#formation"
-                onClick={() => setMobileOpen(false)}
-                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md"
-              >
-                Formation
-              </a>
               <a
                 href="#creations"
                 onClick={() => setMobileOpen(false)}
