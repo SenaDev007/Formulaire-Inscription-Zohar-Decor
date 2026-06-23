@@ -538,3 +538,45 @@ Stage Summary:
 - TrainingInfo section completely removed (cleaner, less redundancy)
 - Pushed to GitHub commit f1694d4 on main branch
 - 5 files changed, 92 insertions, 283 deletions (net -191 lines)
+
+---
+Task ID: 11
+Agent: main (Super Z)
+Task: Use official modern WhatsApp icon in footer, update phone to +229 01 62 59 76 92, insert WhatsApp group QR code in confirmation email.
+
+Work Log:
+- Downloaded 'QR Code whatsapp Zohar Decor.jpeg' from GitHub repo
+  → /public/qr-whatsapp-group.jpeg (518x920, 25KB)
+- Updated WhatsApp icon (PaymentLogos.tsx):
+  - Replaced old generic icon (32x32 viewBox) with official modern glyph
+    (24x24 viewBox, standard WhatsApp brand spec)
+  - Green filled circle (#25D366) with white phone handset
+  - New 'colored' prop (default true) for monochrome contexts
+- Updated phone number:
+  - .env: CONTACT_PHONE="+229 01 62 59 76 92"
+  - .env: NEXT_PUBLIC_WHATSAPP_NUMBER="2290162597692"
+  - .env.example: same updates
+  - lib/email.ts: default fallbacks updated to correct number
+  - Footer.tsx: now uses TRAINING_INFO.whatsappNumber (was process.env)
+- Added QR code to confirmation email:
+  - New WHATSAPP_QR_URL constant = NEXT_PUBLIC_APP_URL + '/qr-whatsapp-group.jpeg'
+  - Updated buildConfirmationEmailHtml() with QR code section:
+    - White card containing 180x180 QR code image
+    - 'Scannez ce QR code avec votre téléphone pour rejoindre le groupe'
+    - Below: existing 'Rejoindre le groupe WhatsApp' button
+    - 'ou cliquez sur le bouton ci-dessus si vous êtes sur mobile'
+  - In production (Vercel), the URL resolves to the public domain so email
+    clients can load the image
+
+Verification:
+- QR code served HTTP 200 ✅
+- VLM confirmed footer: green WhatsApp button with official modern logo,
+  phone +229 01 62 59 76 92 ✅
+- Email HTML tested: contains qr-whatsapp-group.jpeg ✅, 'Scannez' text ✅,
+  WhatsApp group section ✅, correct phone ✅
+- Lint: 0 errors
+
+Stage Summary:
+- Official WhatsApp icon, real phone number, QR code in email — all done
+- Pushed to GitHub commit 2b3ba8e on main branch (after rebase)
+- 5 files changed, 48 insertions, 10 deletions + 1 new image (qr-whatsapp-group.jpeg)
