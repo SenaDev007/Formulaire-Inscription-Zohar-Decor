@@ -1,35 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyFlexpayWebhook, mapFlexpayStatus } from "@/lib/flexpay";
+import {
+  verifyFeeXPayWebhook,
+  checkFeeXPayStatus,
+  mapFeeXPayStatus,
+  FEEXPAY_DEMO_MODE,
+} from "@/lib/feexpay";
 import { sendConfirmationEmail } from "@/lib/email";
 
+/**
+ * FeeXPay webhook. FeeXPay calls this URL (passed as callback_url during
+ * payment init) when a transaction reaches a final state.
+ *
+ * In DEMO mode, verification is bypassed.
+ *
+ * FeeXPay's webhook payload is informational — it does NOT include a
+ * cryptographic signature. To be safe, when a webhook arrives we ALWAYS
+ * re-poll the GET status endpoint to confirm the final state.
+ *
+ * Body shape (FeeXPay):
+ * {
+ *   "reference": "..." | "transref": "...",
+ *   "status": "SUCCESS" | "FAILED" | "PENDING",
+ *   "amount": 5000,
+ *   "payer": { "partyId": "..." }
+ * }
+ */
 export async function POST(req: NextRequest) {
   try {
     const raw = await req.text();
-    const signature = req.headers.get("x-flexpay-signature");
+    const { valid, reference } = verifyFeeXPayWebhook(raw);
 
-    if (!verifyFlexpayWebhook(signature, raw)) {
+    if (!valid) {
       return NextResponse.json(
-        { success: false, error: "Invalid signature" },
-        { status: 401 }
+        { success: false, error: "Invalid webhook payload" },
+        { status: 400 }
       );
     }
 
-    const body = JSON.parse(raw);
-    const { orderNumber, reference, status, transaction, phone } = body || {};
-
-    if (!orderNumber && !reference) {
+    if (!reference) {
       return NextResponse.json(
         { success: false, error: "Missing reference" },
         { status: 400 }
       );
     }
 
+    // Find our payment by FeeXPay reference (or alias)
     const payment = await db.payment.findFirst({
       where: {
         OR: [
-          { flexpayOrderNumber: orderNumber as string },
-          { flexpayReference: reference as string },
+          { feexpayReference: reference },
+          { feexpayOrderNumber: reference },
         ],
       },
       include: { participant: true },
@@ -42,17 +63,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const mapped = mapFlexpayStatus(status as never);
+    // Re-poll FeeXPay for authoritative status (don't trust webhook payload alone)
+    let finalStatus = mapFeeXPayStatus("PENDING");
+    if (!FEEXPAY_DEMO_MODE) {
+      const statusRes = await checkFeeXPayStatus(reference);
+      finalStatus = mapFeeXPayStatus(statusRes.status);
+    } else {
+      // In demo mode, assume SUCCESS (the demo-confirm endpoint already set it)
+      finalStatus = mapFeeXPayStatus("SUCCESS");
+    }
+
     await db.payment.update({
       where: { id: payment.id },
       data: {
-        status: mapped,
-        flexpayTransaction: transaction || payment.flexpayTransaction || null,
-        providerPhone: phone || payment.providerPhone || null,
+        status: finalStatus,
+        feexpayTransaction: reference,
       },
     });
 
-    if (mapped === "SUCCESS") {
+    if (finalStatus === "SUCCESS") {
       const newStatus =
         payment.type === "COMPLET" ? "PAID_FULL" : "PAID_INSCRIPTION";
       await db.participant.update({
@@ -60,6 +89,7 @@ export async function POST(req: NextRequest) {
         data: { status: newStatus, paymentType: payment.type },
       });
 
+      // Fire and forget — email confirmation
       sendConfirmationEmail(payment.participant.email, {
         participant: payment.participant,
         payment,
@@ -68,7 +98,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, status: mapped });
+    return NextResponse.json({ success: true, status: finalStatus });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[payment/webhook] error:", msg);
@@ -79,21 +109,31 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/**
+ * GET — poll a payment's status. Used by the confirmation page client to
+ * check if a Mobile Money payment has been confirmed.
+ *
+ * Query: ?paymentId=xxx  or  ?reference=xxx (FeeXPay reference)
+ */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const paymentId = url.searchParams.get("paymentId");
-  const orderNumber = url.searchParams.get("orderNumber");
+  const reference = url.searchParams.get("reference");
 
-  if (!paymentId && !orderNumber) {
+  if (!paymentId && !reference) {
     return NextResponse.json(
-      { success: false, error: "Missing paymentId or orderNumber" },
+      { success: false, error: "Missing paymentId or reference" },
       { status: 400 }
     );
   }
 
   const payment = await db.payment.findFirst({
     where: {
-      OR: [{ id: paymentId || "" }, { flexpayOrderNumber: orderNumber || "" }],
+      OR: [
+        { id: paymentId || "" },
+        { feexpayReference: reference || "" },
+        { feexpayOrderNumber: reference || "" },
+      ],
     },
     include: { participant: true },
   });
@@ -105,6 +145,45 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // Optionally re-poll FeeXPay for fresh status (only if payment is still PENDING
+  // and we have a reference, and not in demo mode)
+  if (
+    !FEEXPAY_DEMO_MODE &&
+    payment.status === "PENDING" &&
+    payment.feexpayReference
+  ) {
+    try {
+      const statusRes = await checkFeeXPayStatus(payment.feexpayReference);
+      const mapped = mapFeeXPayStatus(statusRes.status);
+      if (mapped !== payment.status) {
+        await db.payment.update({
+          where: { id: payment.id },
+          data: { status: mapped },
+        });
+        if (mapped === "SUCCESS") {
+          const newStatus =
+            payment.type === "COMPLET" ? "PAID_FULL" : "PAID_INSCRIPTION";
+          await db.participant.update({
+            where: { id: payment.participantId },
+            data: { status: newStatus, paymentType: payment.type },
+          });
+          sendConfirmationEmail(payment.participant.email, {
+            participant: payment.participant,
+            payment,
+          }).catch((e) =>
+            console.error("[webhook GET] email error:", e?.message || e)
+          );
+        }
+        return NextResponse.json({
+          success: true,
+          payment: { ...payment, status: mapped },
+        });
+      }
+    } catch {
+      // fall through to return current status
+    }
+  }
+
   return NextResponse.json({
     success: true,
     payment: {
@@ -113,6 +192,10 @@ export async function GET(req: NextRequest) {
       amount: payment.amount,
       type: payment.type,
       provider: payment.provider,
+      feexpayReference: payment.feexpayReference,
+      feexpayTransaction: payment.feexpayTransaction,
+      paymentUrl: payment.paymentUrl,
+      createdAt: payment.createdAt,
       participant: {
         id: payment.participant.id,
         registrationId: payment.participant.registrationId,

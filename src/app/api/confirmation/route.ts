@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
           amount: lastPayment.amount,
           type: lastPayment.type,
           provider: lastPayment.provider,
-          flexpayTransaction: lastPayment.flexpayTransaction,
+          feexpayTransaction: lastPayment.feexpayTransaction,
           paymentUrl: lastPayment.paymentUrl,
           createdAt: lastPayment.createdAt,
         }

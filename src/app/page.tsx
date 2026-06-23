@@ -41,7 +41,7 @@ export type PaymentSummary = {
   amount: number;
   type: string;
   provider: string;
-  flexpayTransaction?: string | null;
+  feexpayTransaction?: string | null;
   paymentUrl?: string | null;
   createdAt: string;
 };

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { initFlexpayPayment, FLEXPAY_DEMO_MODE } from "@/lib/flexpay";
+import {
+  initFeeXPayPayment,
+  mapProviderToReseau,
+  FEEXPAY_DEMO_MODE,
+} from "@/lib/feexpay";
 import { TRAINING_INFO } from "@/lib/email";
 
 const schema = z.object({
@@ -44,55 +48,129 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Prevent duplicate pending payments — if there's already a PENDING
+    // payment, reuse it rather than creating a new one
+    const existingPending = await db.payment.findFirst({
+      where: { participantId, status: "PENDING" },
+      orderBy: { createdAt: "desc" },
+    });
+    if (existingPending) {
+      // If the existing pending payment is the same type, return it
+      if (existingPending.type === paymentType) {
+        return NextResponse.json({
+          success: true,
+          payment: {
+            ...existingPending,
+            feexpayReference: existingPending.feexpayReference,
+            paymentUrl: existingPending.paymentUrl,
+            status: "PENDING",
+          },
+          demoMode: FEEXPAY_DEMO_MODE,
+          redirectRequired: !!existingPending.paymentUrl,
+          message: "Un paiement est déjà en cours pour ce participant.",
+        });
+      }
+      // Otherwise, cancel the old pending payment before creating a new one
+      await db.payment.update({
+        where: { id: existingPending.id },
+        data: { status: "CANCELLED" },
+      });
+    }
+
+    // Card payments require a phone number too (FeeXPay uses it as customer phone)
+    if (!providerPhone || providerPhone.trim().length < 8) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Numéro de téléphone requis pour le paiement",
+        },
+        { status: 400 }
+      );
+    }
+
     const amount =
       paymentType === "COMPLET"
         ? TRAINING_INFO.fullFee
         : TRAINING_INFO.inscriptionFee;
 
+    // Create the payment record first
     const payment = await db.payment.create({
       data: {
         participantId,
         amount,
         type: paymentType,
         provider,
-        providerPhone: providerPhone || null,
+        providerPhone,
         status: "PENDING",
       },
     });
 
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/payment/webhook`;
 
-    const init = await initFlexpayPayment({
-      merchant_phone: providerPhone || "",
+    const init = await initFeeXPayPayment({
       amount,
-      currency: "XOF",
+      phoneNumber: providerPhone,
+      provider: mapProviderToReseau(provider),
+      fullName: `${participant.prenoms} ${participant.nomComplet}`,
+      email: participant.email,
       reference: participant.registrationId,
-      callback_url: callbackUrl,
-      type: provider === "CARD" ? 2 : 1,
-      description: `Inscription Zohar Décor — ${participant.registrationId} — ${paymentType}`,
+      callbackUrl,
+      cardFirstName: participant.prenoms,
+      cardLastName: participant.nomComplet,
+      country: "Bénin",
+      address: participant.ville,
+      district: participant.ville,
+      currency: "XOF",
     });
 
-    let paymentUrl = init.payment_url;
-    let flexpayOrderNumber = init.orderNumber;
+    if (init.status !== "SUCCESS") {
+      // Mark payment as failed and return error
+      await db.payment.update({
+        where: { id: payment.id },
+        data: { status: "FAILED" },
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: init.message || "Échec d'initialisation du paiement FeeXPay",
+        },
+        { status: 502 }
+      );
+    }
 
-    if (FLEXPAY_DEMO_MODE) {
-      paymentUrl = `/api/payment/demo-confirm?paymentId=${payment.id}`;
-      flexpayOrderNumber = `DEMO-${payment.id}`;
+    // Persist the FeeXPay reference + payment URL
+    const feexpayReference = init.reference || init.transref || null;
+    let paymentUrl = init.paymentUrl || null;
+
+    // In DEMO mode, the paymentUrl returned by initFeeXPayPayment already
+    // points to /api/payment/demo-confirm?reference=...&feexpayRef=...
+    // We append our internal paymentId so demo-confirm can find the row.
+    if (FEEXPAY_DEMO_MODE && paymentUrl) {
+      const sep = paymentUrl.includes("?") ? "&" : "?";
+      paymentUrl = `${paymentUrl}${sep}paymentId=${payment.id}`;
     }
 
     await db.payment.update({
       where: { id: payment.id },
       data: {
-        flexpayReference: init.reference || null,
-        flexpayOrderNumber,
+        feexpayReference,
+        feexpayOrderNumber: feexpayReference, // alias for compat
         paymentUrl,
       },
     });
 
     return NextResponse.json({
       success: true,
-      payment: { ...payment, paymentUrl, flexpayOrderNumber },
-      demoMode: FLEXPAY_DEMO_MODE,
+      payment: {
+        ...payment,
+        feexpayReference,
+        paymentUrl,
+        status: "PENDING",
+      },
+      demoMode: FEEXPAY_DEMO_MODE,
+      // For card: user must be redirected to paymentUrl
+      // For MoMo: user receives a push on their phone, we poll the status
+      redirectRequired: !!paymentUrl,
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);

@@ -69,7 +69,7 @@ export function PaymentSection({
         title: json.demoMode ? "Mode démo" : "Paiement initié",
         description: json.demoMode
           ? "Mode démo — vous allez être redirigé pour confirmer."
-          : "Vous allez être redirigé vers Flexpay.",
+          : "Vous allez être redirigé vers FeexPay.",
       });
       onPaymentInitiated({
         id: json.payment.id,
@@ -77,7 +77,7 @@ export function PaymentSection({
         amount: json.payment.amount,
         type: json.payment.type,
         provider: json.payment.provider,
-        flexpayTransaction: json.payment.flexpayTransaction,
+        feexpayTransaction: json.payment.feexpayTransaction,
         paymentUrl: json.payment.paymentUrl,
         createdAt: new Date().toISOString(),
       });
@@ -322,7 +322,7 @@ export function PaymentSection({
                 </div>
 
                 <div className="mt-6 p-3 rounded-lg bg-beige/50 text-xs text-muted-foreground leading-relaxed">
-                  Paiement sécurisé via Flexpay. Vous recevrez un reçu par email
+                  Paiement sécurisé via FeexPay. Vous recevrez un reçu par email
                   et un message WhatsApp de confirmation après paiement.
                 </div>
               </div>

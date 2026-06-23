@@ -38,7 +38,7 @@ type ConfirmationData = {
     amount: number;
     type: string;
     provider: string;
-    flexpayTransaction?: string | null;
+    feexpayTransaction?: string | null;
     paymentUrl?: string | null;
     createdAt: string;
   } | null;
@@ -284,9 +284,9 @@ export function ConfirmationSection({
                   <p className="text-lg font-bold text-[#C9A227] mt-1">
                     {formatted} FCFA
                   </p>
-                  {data?.payment?.flexpayTransaction && (
+                  {data?.payment?.feexpayTransaction && (
                     <p className="text-[10px] text-muted-foreground mt-1 break-all">
-                      Réf : {data.payment.flexpayTransaction}
+                      Réf : {data.payment.feexpayTransaction}
                     </p>
                   )}
                 </div>

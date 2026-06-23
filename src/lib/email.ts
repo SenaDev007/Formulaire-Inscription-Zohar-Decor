@@ -104,10 +104,10 @@ export function buildConfirmationEmailHtml({
                       <td style="padding:6px 0;color:#666;font-size:13px;">Montant payé</td>
                       <td style="padding:6px 0;color:#C9A227;font-size:15px;font-weight:700;text-align:right;">${formattedAmount} FCFA</td>
                     </tr>
-                    ${payment?.flexpayTransaction ? `
+                    ${payment?.feexpayTransaction ? `
                     <tr>
                       <td style="padding:6px 0;color:#666;font-size:13px;">Référence transaction</td>
-                      <td style="padding:6px 0;color:#111;font-size:13px;font-weight:600;text-align:right;">${payment.flexpayTransaction}</td>
+                      <td style="padding:6px 0;color:#111;font-size:13px;font-weight:600;text-align:right;">${payment.feexpayTransaction}</td>
                     </tr>` : ""}
                   </table>
                 </td></tr>

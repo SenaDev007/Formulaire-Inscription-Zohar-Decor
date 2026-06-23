@@ -5,7 +5,7 @@
 
 Plateforme web moderne, responsive et professionnelle permettant aux
 participants de s'inscrire à la formation en résine époxy organisée par
-**Zohar Décor**. Paiement Mobile Money + carte via Flexpay, confirmation
+**Zohar Décor**. Paiement Mobile Money + carte via **FeeXPay**, confirmation
 automatique email + WhatsApp, et tableau de bord administrateur sécurisé.
 
 ---
@@ -17,12 +17,11 @@ automatique email + WhatsApp, et tableau de bord administrateur sécurisé.
 3. [Fonctionnalités](#fonctionnalités)
 4. [Installation locale](#installation-locale)
 5. [Variables d'environnement](#variables-denvironnement)
-6. [Base de données](#base-de-données)
+6. [Déploiement sur Vercel](#déploiement-sur-vercel-recommandé)
 7. [Intégrations externes](#intégrations-externes)
-8. [Déploiement en production](#déploiement-en-production)
-9. [Documentation API](#documentation-api)
-10. [Sécurité](#sécurité)
-11. [Maintenance & sauvegardes](#maintenance--sauvegardes)
+8. [Documentation API](#documentation-api)
+9. [Sécurité](#sécurité)
+10. [Maintenance & sauvegardes](#maintenance--sauvegardes)
 
 ---
 
@@ -38,7 +37,7 @@ automatique email + WhatsApp, et tableau de bord administrateur sécurisé.
 |------|-----|-------------|
 | Accueil | `/` | Hero, programme, créations, tarifs, FAQ |
 | Inscription | `/#register` | Formulaire complet (12 champs) |
-| Paiement | `/#payment` | Flexpay — MTN MoMo, Moov, Celtiis, carte |
+| Paiement | `/#payment` | FeeXPay — MTN MoMo, Moov, Celtiis, carte |
 | Confirmation | `/#confirmation` | N° d'inscription `ZD-2026-XXX`, reçu, WhatsApp |
 | Admin | `/#admin` | Dashboard sécurisé (login + JWT cookie) |
 
@@ -53,13 +52,14 @@ automatique email + WhatsApp, et tableau de bord administrateur sécurisé.
 | UI | **Tailwind CSS 4** + **shadcn/ui** (New York) + Lucide icons |
 | Animation | **Framer Motion** |
 | Forms | **react-hook-form** + **zod** |
-| Base de données | **Prisma ORM** + SQLite (dev) / PostgreSQL ou MySQL (prod) |
+| Base de données | **Prisma ORM** + SQLite (dev) / PostgreSQL (prod Vercel) |
 | Auth | **JWT** (cookies httpOnly) + **bcryptjs** |
 | Email | **Resend** (`noreply@academiahelm.com`) |
-| Paiement | **Flexpay** (MTN MoMo, Moov Money, Celtiis Cash, carte) |
+| Paiement | **FeeXPay** (https://feexpay.me) — MTN MoMo, Moov Money, Celtiis Cash, carte |
 | WhatsApp | Lien direct `wa.me` (pas d'API Business requise) |
 | Exports | **xlsx** (Excel) + **pdfkit** (PDF) |
 | Runtime | **Bun** (recommandé) ou Node.js 20+ |
+| Hébergement | **Vercel** (recommandé) |
 
 ---
 
@@ -69,7 +69,7 @@ automatique email + WhatsApp, et tableau de bord administrateur sécurisé.
 
 - 🏠 **Page d'accueil premium** : bannière, infos clés (dates, lieu, prix, places), galerie de créations, FAQ
 - 📝 **Formulaire d'inscription** (12 champs) avec validation zod + honeypot anti-spam
-- 💳 **Paiement Flexpay** : 4 moyens (MTN MoMo, Moov Money, Celtiis Cash, carte)
+- 💳 **Paiement FeeXPay** : 4 moyens (MTN MoMo, Moov Money, Celtiis Cash, carte VISA/Mastercard)
 - 🎫 **Confirmation automatique** avec numéro unique `ZD-2026-001`, `ZD-2026-002`, …
 - 📧 **Email de confirmation** (HTML premium, reçu de paiement, détails formation)
 - 💬 **Lien WhatsApp pré-rempli** pour confirmation instantanée
@@ -105,14 +105,13 @@ cd Formulaire-Inscription-Zohar-Decor
 
 # 2. Installer les dépendances
 bun install
-# ou: npm install
 
 # 3. Copier le fichier d'environnement
 cp .env.example .env
 
 # 4. Éditer .env avec vos valeurs (voir section ci-dessous)
 
-# 5. Créer la base de données + générer le client Prisma
+# 5. Créer la base de données SQLite + générer le client Prisma
 bun run db:push
 bun run db:generate
 
@@ -126,13 +125,6 @@ curl -X POST http://localhost:3000/api/seed
 # (modifiable dans .env avant le seed)
 ```
 
-### Build de production
-
-```bash
-bun run build
-bun run start
-```
-
 ---
 
 ## 🔐 Variables d'environnement
@@ -140,22 +132,18 @@ bun run start
 Voir `.env.example` pour le template. Voici le détail :
 
 ```bash
-# ===== Base de données =====
-# SQLite (dev) — fichier local
+# ===== Database =====
+# DEV (SQLite — fichier local, zéro setup):
 DATABASE_URL="file:./dev.db"
 
-# PostgreSQL (prod) — exemple Supabase / Neon / Railway
+# PRODUCTION (Vercel Postgres / Supabase / Neon):
 # DATABASE_URL="postgresql://user:pass@host:5432/zohar_decor?schema=public"
-
-# MySQL (prod) — exemple PlanetScale / OVH
-# DATABASE_URL="mysql://user:pass@host:3306/zohar_decor"
 
 # ===== App =====
 NEXT_PUBLIC_APP_URL="https://votre-domaine.com"
-NEXT_PUBLIC_WHATSAPP_NUMBER="22900000000"  # Numéro WhatsApp Business Zohar Décor
+NEXT_PUBLIC_WHATSAPP_NUMBER="22900000000"  # WhatsApp Business Zohar Décor
 
 # ===== Admin bootstrap =====
-# Utilisé par /api/seed pour créer le 1er admin
 ADMIN_BOOTSTRAP_EMAIL="admin@zohardecor.com"
 ADMIN_BOOTSTRAP_PASSWORD="ZoharDecor2026!"
 
@@ -164,110 +152,218 @@ JWT_SECRET="generate-a-long-random-string"  # ex: openssl rand -base64 64
 JWT_EXPIRES_IN="7d"
 
 # ===== Resend (Email) =====
-# Obtenir une clé: https://resend.com/api-keys
 RESEND_API_KEY="re_xxxxxxxxxx"
 EMAIL_FROM_NOREPLY="noreply@academiahelm.com"
 EMAIL_FROM_NAME="Zohar Décor"
 
-# ===== Flexpay (Paiement) =====
-# Obtenir un token marchand: https://flexpay.cd
-FLEXPAY_BASE_URL="https://payment.flexpay.cd/api/v1"
-FLEXPAY_MERCHANT_TOKEN=""          # Laisser vide en dev → mode démo
-FLEXPAY_WEBHOOK_SECRET=""
-FLEXPAY_SANDBOX="false"            # true = ignore la signature webhook
+# ===== FeeXPay (Paiement) =====
+# Docs: https://docs.feexpay.me
+# Laisser vide → MODE DÉMO (paiements auto-confirmés pour test)
+FEEXPAY_BASE_URL="https://api.feexpay.me"
+FEEXPAY_SHOP_ID=""          # Votre shop ID marchand FeeXPay
+FEEXPAY_API_TOKEN=""        # Votre token API FeeXPay
+FEEXPAY_SANDBOX="false"     # true en dev, false en prod
 
 # ===== Contact =====
 CONTACT_PHONE="+22900000000"
 CONTACT_EMAIL="contact@zohardecor.com"
 ```
 
-> ⚠️ **Mode démo** : si `FLEXPAY_MERCHANT_TOKEN` est vide, l'app fonctionne en
-> mode démo. Le paiement est simulé via `/api/payment/demo-confirm` qui
-> marque automatiquement la transaction comme réussie. Idéal pour les tests.
+> ⚠️ **Mode démo** : si `FEEXPAY_SHOP_ID` ou `FEEXPAY_API_TOKEN` est vide,
+> l'app fonctionne en mode démo. Le paiement est simulé via
+> `/api/payment/demo-confirm` qui marque automatiquement la transaction
+> comme réussie. Idéal pour les tests et la démo.
 
 ---
 
-## 💾 Base de données
+## ▲ Déploiement sur Vercel (recommandé)
 
-### Schéma (3 modèles)
+Vercel est l'hébergement le plus simple pour ce projet Next.js. Voici la
+procédure complète, étape par étape.
 
-```
-Participant
-  ├─ id, registrationId (ZD-2026-XXX), nomComplet, prenoms, sexe,
-  │  dateNaissance, telWhatsApp, telSecondaire, email, ville,
-  │  profession, niveauEtudes, sourceConnaissance, acceptConditions,
-  │  status (PENDING | PAID_INSCRIPTION | PAID_FULL | VALIDATED | CANCELLED),
-  │  paymentType (INSCRIPTION | COMPLET), createdAt, updatedAt
-  └─ payments: Payment[]
+### Étape 1 — Préparer le schéma PostgreSQL
 
-Payment
-  ├─ id, participantId, amount (FCFA), type, provider,
-  │  providerPhone, flexpayReference, flexpayOrderNumber,
-  │  flexpayTransaction, status (PENDING | SUCCESS | FAILED | CANCELLED),
-  │  paymentUrl, manuallyValidated, validatedById, createdAt, updatedAt
-  └─ participant: Participant
+Avant de déployer, il faut passer le schéma Prisma de SQLite à PostgreSQL.
 
-AdminUser
-  ├─ id, email, name, passwordHash (bcrypt), role, createdAt, updatedAt
-  └─ (relation via Payment.validatedById)
+**Éditez `prisma/schema.prisma`** :
 
-Setting (clé-valeur, pour config dynamique future)
+```prisma
+datasource db {
+  // Commentez la ligne sqlite :
+  // provider = "sqlite"
+  // Décommentez la ligne postgresql :
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 ```
 
-### Migrations
+Committez et poussez sur GitHub :
 
 ```bash
-# Push le schéma vers la DB (dev)
-bun run db:push
-
-# Créer une migration (prod)
-bun run db:migrate -- --name init
-
-# Reset total
-bun run db:reset
+git add prisma/schema.prisma
+git commit -m "chore: switch Prisma provider to postgresql for Vercel"
+git push
 ```
 
-### Passer à PostgreSQL / MySQL en production
+### Étape 2 — Créer une base PostgreSQL gratuite
 
-1. Éditez `prisma/schema.prisma` :
-   ```prisma
-   datasource db {
-     provider = "postgresql"  // ou "mysql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-2. Mettez à jour `DATABASE_URL` dans `.env`
-3. Exécutez :
-   ```bash
-   bun run db:push
-   curl -X POST https://votre-domaine.com/api/seed  # crée l'admin
-   ```
+Choisissez UNE des trois options ci-dessous (toutes gratuites) :
+
+#### Option A — Vercel Postgres (le plus simple)
+
+1. Sur https://vercel.com/dashboard → votre projet → onglet **Storage**
+2. Cliquez **Create Database** → **Postgres** (Neon-powered)
+3. Donnez un nom : `zohar-decor`
+4. Une fois créée, cliquez **Connect to Project** → Vercel ajoute
+   automatiquement `DATABASE_URL` (et `POSTGRES_*`) aux variables d'env
+
+#### Option B — Supabase (le plus généreux en gratuit)
+
+1. Créez un compte sur https://supabase.com
+2. New Project → `zohar-decor` → région **Frankfurt** ou **Paris**
+3. Settings → Database → Connection string → **URI**
+4. Copiez l'URI (format : `postgresql://postgres.xxxx:pass@xxxx.supabase.co:5432/postgres`)
+5. Vous l'ajouterez à Vercel à l'étape 4
+
+#### Option C — Neon (le plus rapide)
+
+1. Créez un compte sur https://neon.tech
+2. New Project → `zohar-decor`
+3. Copy connection string → `postgresql://user:pass@ep-xxxx.neon.tech/neondb?sslmode=require`
+4. Vous l'ajouterez à Vercel à l'étape 4
+
+### Étape 3 — Connecter le repo GitHub à Vercel
+
+1. Allez sur https://vercel.com/new
+2. Importez le repo `SenaDev007/Formulaire-Inscription-Zohar-Decor`
+3. **Framework Preset** : Next.js (auto-détecté)
+4. **Build Command** : `prisma generate && next build` (déjà dans `vercel.json`)
+5. **Install Command** : laissez par défaut (Vercel détecte `bun.lock`)
+
+### Étape 4 — Configurer les variables d'environnement
+
+Dans Vercel → votre projet → **Settings → Environment Variables**, ajoutez
+TOUTES les variables ci-dessous (voir `.env.example` pour le template) :
+
+| Variable | Valeur |
+|----------|--------|
+| `DATABASE_URL` | Votre connection string PostgreSQL (de l'étape 2) |
+| `NEXT_PUBLIC_APP_URL` | `https://votre-projet.vercel.app` |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Votre numéro WhatsApp Business |
+| `ADMIN_BOOTSTRAP_EMAIL` | `admin@zohardecor.com` |
+| `ADMIN_BOOTSTRAP_PASSWORD` | Un mot de passe fort (à garder secret) |
+| `JWT_SECRET` | `openssl rand -base64 64` (générez une chaîne aléatoire) |
+| `JWT_EXPIRES_IN` | `7d` |
+| `RESEND_API_KEY` | Votre clé Resend (`re_xxx`) |
+| `EMAIL_FROM_NOREPLY` | `noreply@academiahelm.com` |
+| `EMAIL_FROM_NAME` | `Zohar Décor` |
+| `FEEXPAY_BASE_URL` | `https://api.feexpay.me` |
+| `FEEXPAY_SHOP_ID` | Votre shop ID FeeXPay (dashboard feexpay.me) |
+| `FEEXPAY_API_TOKEN` | Votre token API FeeXPay |
+| `FEEXPAY_SANDBOX` | `false` (production) |
+| `CONTACT_PHONE` | `+22900000000` |
+| `CONTACT_EMAIL` | `contact@zohardecor.com` |
+
+> 💡 Cochez toutes les cases d'environnement : **Production**, **Preview**, **Development**
+
+### Étape 5 — Déployer
+
+1. Cliquez **Deploy** sur Vercel
+2. Attendez que le build se termine (3-5 minutes la première fois)
+3. Vercel affiche l'URL : `https://votre-projet.vercel.app`
+
+### Étape 6 — Initialiser la base de données + admin
+
+Une fois déployé, exécutez UNE FOIS la commande seed pour créer les tables
+et le compte admin :
+
+```bash
+# Remplacez par votre URL Vercel
+curl -X POST https://votre-projet.vercel.app/api/seed
+```
+
+Vous verrez :
+```json
+{
+  "success": true,
+  "message": "Seed complete",
+  "participantCount": 0,
+  "trainingInfo": { ... }
+}
+```
+
+> ⚠️ **Sécurité** : après le premier seed, protégez ou supprimez l'endpoint
+> `/api/seed` (ajoutez une vérification d'admin, ou supprimez le fichier en
+> production). En l'état, quiconque connaît l'URL peut appeler le seed, mais
+> il est idempotent (ne crée l'admin que s'il n'existe pas).
+
+### Étape 7 — Tester
+
+1. Visitez `https://votre-projet.vercel.app` → page d'accueil
+2. Cliquez **Je m'inscris maintenant** → remplissez le formulaire
+3. Vous êtes redirigé vers FeeXPay → payez (ou utilisez le mode sandbox)
+4. Confirmation s'affiche avec votre `ZD-2026-001`
+5. Email envoyé à votre adresse
+6. Allez sur `/#admin` → connectez-vous → voyez votre inscription
+
+### Étape 8 — Configurer le webhook FeeXPay (IMPORTANT)
+
+Pour que FeeXPay notifie votre app quand un paiement est confirmé :
+
+1. Allez sur le dashboard FeeXPay → **Settings** → **Webhooks** (ou **Callback URL**)
+2. Ajoutez l'URL : `https://votre-projet.vercel.app/api/payment/webhook`
+3. Sélectionnez les événements : **payment.success**, **payment.failed**
+
+> ℹ️ Même sans webhook configuré, l'app fonctionne : la page de confirmation
+> interroge automatiquement l'API FeeXPay toutes les 4 secondes pour vérifier
+> le statut. Le webhook accélère juste la confirmation.
+
+### Domaine personnalisé (optionnel)
+
+1. Vercel → votre projet → **Settings → Domains**
+2. Ajoutez `zohardecor.com` (ou votre domaine)
+3. Configurez les DNS chez votre registrar (Vercel vous guide)
+4. Mettez à jour `NEXT_PUBLIC_APP_URL` avec le nouveau domaine
 
 ---
 
 ## 🔌 Intégrations externes
 
-### 1. Flexpay (paiement)
+### 1. FeeXPay (paiement) — https://feexpay.me
 
-**Endpoints utilisés :**
-- `POST {FLEXPAY_BASE_URL}/pay` — initier un paiement
-- `GET {FLEXPAY_BASE_URL}/transaction/{orderNumber}` — vérifier le statut
-- Webhook entrant : `POST /api/payment/webhook` (Flexpay appelle cette URL)
+**Endpoints FeeXPay utilisés** (tous documentés dans `src/lib/feexpay.ts`) :
 
-**Configuration :**
-1. Créez un compte marchand sur https://flexpay.cd
-2. Récupérez votre `merchant_token`
-3. Mettez-le dans `FLEXPAY_MERCHANT_TOKEN`
-4. Configurez l'URL de webhook dans le dashboard Flexpay :
-   `https://votre-domaine.com/api/payment/webhook`
+| Endpoint | Méthode | Usage |
+|----------|---------|-------|
+| `/api/shop/{shop}/get_shop` | GET | Valide le shop marchand |
+| `/api/transactions/requesttopay/integration` | POST | Paiement Mobile Money (MTN, MOOV, CELTIIS) |
+| `/api/transactions/card/inittransact/integration` | POST | Paiement carte (VISA, MASTERCARD) → renvoie une URL de redirection |
+| `/api/transactions/getrequesttopay/integration/{ref}` | GET | Vérifier le statut d'une transaction |
 
-**Providers supportés :**
-- MTN MoMo (`MTN_MOMO`)
-- Moov Money (`MOOV_MONEY`)
-- Celtiis Cash (`CELTIIS_CASH`)
-- Carte bancaire (`CARD`)
+**Authentification** : Le `token` API et le `shop` ID sont envoyés DANS LE
+CORPS de la requête (form-encodé), PAS dans un header Bearer.
 
-### 2. Resend (email)
+**Configuration** :
+1. Créez un compte marchand sur https://feexpay.me
+2. Récupérez votre **Shop ID** et **API Token** depuis le dashboard
+3. Mettez-les dans `FEEXPAY_SHOP_ID` et `FEEXPAY_API_TOKEN`
+
+**Providers supportés au Bénin** :
+- MTN MoMo (`MTN`)
+- Moov Money (`MOOV`)
+- Celtiis Cash (`CELTIIS`)
+- Carte VISA (`VISA`)
+- Carte Mastercard (`MASTERCARD`)
+
+**Flux de paiement** :
+
+- **Mobile Money** : asynchrone — FeeXPay envoie une push USSD au téléphone
+  du client, on reçoit une `reference` qu'on interroge périodiquement
+- **Carte** : synchrone — FeeXPay renvoie une `url` vers laquelle on
+  redirige le client ; il saisit sa carte sur la page FeeXPay, puis est
+  redirigé vers notre `callback_url`
+
+### 2. Resend (email) — https://resend.com
 
 **Utilisé pour :**
 - Email de confirmation automatique après paiement (HTML premium + reçu)
@@ -299,63 +395,6 @@ message pré-rempli, l'utilisateur n'a plus qu'à appuyer sur Envoyer.
 
 ---
 
-## 🌐 Déploiement en production
-
-### Option A — Vercel (recommandé, gratuit)
-
-1. Push le code sur GitHub
-2. Connectez le repo sur https://vercel.com
-3. Configurez les variables d'environnement (voir `.env.example`)
-4. Utilisez **Vercel Postgres** ou **Supabase** pour la DB PostgreSQL
-5. Déployez
-
-```bash
-# Variable DATABASE_URL doit pointer vers Postgres en prod
-DATABASE_URL="postgresql://..."
-```
-
-### Option B — VPS (Ubuntu/Debian)
-
-```bash
-# 1. Cloner + installer
-git clone https://github.com/SenaDev007/Formulaire-Inscription-Zohar-Decor.git
-cd Formulaire-Inscription-Zohar-Decor
-curl -fsSL https://bun.sh/install | bash
-bun install
-
-# 2. Configurer
-cp .env.example .env
-nano .env  # éditer avec les vraies valeurs
-
-# 3. Build + start
-bun run build
-bun run start  # écoute sur le port 3000
-
-# 4. Reverse proxy avec Caddy / Nginx
-# Caddyfile exemple:
-# votre-domaine.com {
-#   reverse_proxy localhost:3000
-# }
-```
-
-### Option C — Docker (à venir)
-
-Un `Dockerfile` et `docker-compose.yml` seront ajoutés prochainement.
-
-### Checklist de mise en production
-
-- [ ] `.env` rempli avec de vraies valeurs (PAS le mode démo)
-- [ ] `JWT_SECRET` est une chaîne aléatoire longue (64+ caractères)
-- [ ] `FLEXPAY_MERCHANT_TOKEN` configuré
-- [ ] `RESEND_API_KEY` configuré et domaine vérifié
-- [ ] Base de données PostgreSQL/MySQL en production (PAS SQLite)
-- [ ] HTTPS activé (Caddy / Nginx / Vercel le gère automatiquement)
-- [ ] `curl -X POST https://votre-domaine.com/api/seed` exécuté une fois
-- [ ] URL de webhook Flexpay configurée : `https://votre-domaine.com/api/payment/webhook`
-- [ ] Backups automatiques de la DB configurés
-
----
-
 ## 📡 Documentation API
 
 ### Publiques
@@ -363,13 +402,13 @@ Un `Dockerfile` et `docker-compose.yml` seront ajoutés prochainement.
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
 | `POST` | `/api/register` | Inscrire un participant |
-| `POST` | `/api/payment/init` | Initialiser un paiement Flexpay |
-| `GET` | `/api/payment/webhook` | Vérifier le statut d'un paiement |
-| `POST` | `/api/payment/webhook` | Webhook entrant Flexpay |
+| `POST` | `/api/payment/init` | Initialiser un paiement FeeXPay |
+| `GET` | `/api/payment/webhook` | Vérifier le statut d'un paiement (polling) |
+| `POST` | `/api/payment/webhook` | Webhook entrant FeeXPay |
 | `GET` | `/api/payment/demo-confirm?paymentId=xxx` | Mode démo : simule un paiement réussi |
 | `GET` | `/api/confirmation?registrationId=xxx` | Récupérer les détails d'une inscription |
-| `GET` | `/api/whatsapp/confirm-link?registrationId=xxx` | Lien WhatsApp pré-rempli pour un participant |
-| `POST` | `/api/seed` | Crée l'admin par défaut (à protéger/supprimer en prod) |
+| `GET` | `/api/whatsapp/confirm-link?registrationId=xxx` | Lien WhatsApp pré-rempli |
+| `POST` | `/api/seed` | Crée l'admin par défaut (à protéger en prod) |
 
 ### Admin (JWT requis)
 
@@ -389,47 +428,6 @@ Un `Dockerfile` et `docker-compose.yml` seront ajoutés prochainement.
 | `POST` | `/api/admin/bulk-email` | Email collectif |
 | `POST` | `/api/admin/bulk-whatsapp` | Liens WhatsApp collectifs |
 
-### Exemple : inscription complète
-
-```bash
-# 1. Inscription
-curl -X POST https://votre-domaine.com/api/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nomComplet": "DOSSOU",
-    "prenoms": "Marie-Grace",
-    "sexe": "F",
-    "dateNaissance": "1998-05-15",
-    "telWhatsApp": "+2290197000001",
-    "email": "marie.grace@example.com",
-    "ville": "Cotonou",
-    "profession": "Étudiante",
-    "niveauEtudes": "BAC",
-    "sourceConnaissance": "WhatsApp",
-    "acceptConditions": true
-  }'
-# → { "success": true, "participant": { "id": "...", "registrationId": "ZD-2026-001", ... } }
-
-# 2. Init paiement
-curl -X POST https://votre-domaine.com/api/payment/init \
-  -H "Content-Type: application/json" \
-  -d '{
-    "participantId": "<id>",
-    "paymentType": "COMPLET",
-    "provider": "MTN_MOMO",
-    "providerPhone": "2290197000001"
-  }'
-# → { "success": true, "payment": { "paymentUrl": "...", ... } }
-
-# 3. Redirection vers paymentUrl (Flexpay ou /api/payment/demo-confirm en démo)
-
-# 4. Flexpay appelle /api/payment/webhook → statut SUCCESS
-#    → Email envoyé, participant.status = "PAID_FULL"
-
-# 5. Confirmation
-curl https://votre-domaine.com/api/confirmation?registrationId=ZD-2026-001
-```
-
 ---
 
 ## 🔒 Sécurité
@@ -439,20 +437,25 @@ curl https://votre-domaine.com/api/confirmation?registrationId=ZD-2026-001
 - **Mots de passe** : hachés avec **bcryptjs** (10 rounds)
 - **Anti-spam** : honeypot `website` field dans le formulaire d'inscription
 - **Validation** : tous les inputs validés avec **zod** (server-side)
-- **CORS** : Next.js gère automatiquement (same-origin)
-- **HTTPS** : obligatoire en production (Vercel / Caddy / Let's Encrypt)
-- **Variables sensibles** : `JWT_SECRET`, `FLEXPAY_MERCHANT_TOKEN`,
-  `RESEND_API_KEY` ne sont JAMAIS exposées côté client
+- **HTTPS** : automatique sur Vercel
+- **Variables sensibles** : `JWT_SECRET`, `FEEXPAY_API_TOKEN`, `RESEND_API_KEY`
+  ne sont JAMAIS exposées côté client
 - **Capacité** : 10 places max, vérifiée server-side à l'inscription
 - **Unicité** : email + téléphone WhatsApp uniques par participant
+- **Webhook FeeXPay** : re-poll systématiquement l'API FeeXPay pour confirmer
+  le statut (ne fait pas confiance au payload webhook seul)
 
-### Recommandations de production
+### Checklist de mise en production
 
-1. **Révoquez** le token GitHub de bootstrap après le premier push
-2. **Supprimez** `/api/seed` ou protégez-le après la création de l'admin
-3. **Activez** le rate-limiting (Vercel le gère nativement)
-4. **Monitorrez** les webhooks Flexpay (logs serveur)
-5. **Backup quotidien** de la base de données
+- [ ] `.env` / variables Vercel remplies avec de vraies valeurs
+- [ ] `JWT_SECRET` est une chaîne aléatoire longue (64+ caractères)
+- [ ] `FEEXPAY_SHOP_ID` et `FEEXPAY_API_TOKEN` configurés
+- [ ] `RESEND_API_KEY` configuré et domaine vérifié
+- [ ] Base de données PostgreSQL en production (PAS SQLite)
+- [ ] `prisma/schema.prisma` : `provider = "postgresql"`
+- [ ] `/api/seed` exécuté une fois pour créer l'admin
+- [ ] Webhook FeeXPay configuré : `https://votre-domaine.com/api/payment/webhook`
+- [ ] `/api/seed` protégé ou supprimé après création de l'admin
 
 ---
 
@@ -461,17 +464,18 @@ curl https://votre-domaine.com/api/confirmation?registrationId=ZD-2026-001
 ### Sauvegarde automatique (PostgreSQL)
 
 ```bash
-# Crontab quotidien à 3h du matin
+# Crontab quotidien à 3h du matin (sur un serveur externe)
 0 3 * * * pg_dump $DATABASE_URL | gzip > /backups/zohar-$(date +\%Y\%m\%d).sql.gz
 # Garder 30 jours
 0 4 * * * find /backups -name "zohar-*.sql.gz" -mtime +30 -delete
 ```
 
-### Pour SQLite (dev)
+### Vercel Postgres / Supabase / Neon
 
-```bash
-cp prisma/dev.db prisma/dev.db.backup.$(date +%Y%m%d)
-```
+Ces services ont des sauvegardes automatiques intégrées :
+- **Vercel Postgres** : sauvegarde quotidienne, rétention 7 jours
+- **Supabase** : sauvegarde quotidienne, rétention 7 jours (plan gratuit)
+- **Neon** : Point-in-Time Recovery sur 7 jours (plan gratuit)
 
 ### Mise à jour
 
@@ -479,7 +483,7 @@ cp prisma/dev.db prisma/dev.db.backup.$(date +%Y%m%d)
 git pull
 bun install
 bun run db:push  # si schéma modifié
-# rebuild + restart en prod
+# Sur Vercel : redéployage automatique après git push
 ```
 
 ---

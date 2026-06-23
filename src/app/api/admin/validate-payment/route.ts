@@ -32,14 +32,14 @@ export async function POST(req: NextRequest) {
   }
 
   const txRef =
-    payment.flexpayTransaction || `MANUAL-${session.id}-${Date.now()}`;
+    payment.feexpayTransaction || `MANUAL-${session.id}-${Date.now()}`;
   await db.payment.update({
     where: { id: payment.id },
     data: {
       status: "SUCCESS",
       manuallyValidated: true,
       validatedById: session.id,
-      flexpayTransaction: txRef,
+      feexpayTransaction: txRef,
     },
   });
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   sendConfirmationEmail(payment.participant.email, {
     participant: payment.participant,
-    payment: { ...payment, status: "SUCCESS", flexpayTransaction: txRef },
+    payment: { ...payment, status: "SUCCESS", feexpayTransaction: txRef },
   }).catch((e) =>
     console.error("[admin/validate] email error:", e?.message || e)
   );

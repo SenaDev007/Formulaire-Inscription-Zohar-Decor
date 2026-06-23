@@ -146,7 +146,7 @@ export function Pricing({ onRegister }: { onRegister: () => void }) {
         {/* Payment methods */}
         <div className="mt-12 text-center">
           <p className="text-xs text-muted-foreground tracking-wider uppercase mb-4">
-            Paiement sécurisé via Flexpay
+            Paiement sécurisé via FeexPay
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {[

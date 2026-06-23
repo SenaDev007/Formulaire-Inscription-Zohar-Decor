@@ -1,13 +1,20 @@
 // Zohar Décor - Formation Résine Époxy
-// Prisma schema (SQLite for dev — switch datasource provider to
-// "postgresql" or "mysql" for production)
+// Prisma schema
+//
+// For LOCAL DEV: provider = "sqlite" (zero setup)
+// For VERCEL / PRODUCTION: change provider to "postgresql" and set
+// DATABASE_URL to your Vercel Postgres / Supabase / Neon connection string.
+// See README.md → "Déploiement en production" for the full migration guide.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
+  // DEV:
   provider = "sqlite"
+  // PROD (Vercel): uncomment the next line, comment the one above
+  // provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -17,7 +24,7 @@ model Participant {
   nomComplet          String
   prenoms             String
   sexe                String     // "M" | "F"
-  dateNaissance       String     // stored as ISO date string for SQLite portability
+  dateNaissance       String     // ISO date string
   telWhatsApp         String
   telSecondaire       String?
   email               String
@@ -45,13 +52,13 @@ model Payment {
   participant         Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   amount              Int        // in FCFA
   type                String     // "INSCRIPTION" (5000) | "COMPLET" (25000)
-  provider            String     // "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD" | "FLEXPAY"
+  provider            String     // "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD"
   providerPhone       String?
-  flexpayReference    String?    @unique
-  flexpayOrderNumber  String?
-  flexpayTransaction  String?
+  feexpayReference    String?    @unique // FeeXPay reference (MoMo) or transref (card)
+  feexpayOrderNumber  String?    // alias kept for backward compat with admin UI
+  feexpayTransaction  String?    // final confirmed transaction id
   status              String     @default("PENDING") // PENDING | SUCCESS | FAILED | CANCELLED
-  paymentUrl          String?    // URL the user is redirected to
+  paymentUrl          String?    // URL the user is redirected to (card only)
   manuallyValidated   Boolean    @default(false)
   validatedById       String?    // AdminUser id, if manually validated
   createdAt           DateTime   @default(now())
@@ -59,7 +66,7 @@ model Payment {
 
   @@index([participantId])
   @@index([status])
-  @@index([flexpayReference])
+  @@index([feexpayReference])
 }
 
 model AdminUser {

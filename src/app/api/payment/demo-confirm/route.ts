@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendConfirmationEmail } from "@/lib/email";
 
+/**
+ * DEMO MODE ONLY — simulates a FeeXPay success webhook.
+ * Usage: GET /api/payment/demo-confirm?paymentId=xxx&reference=xxx&feexpayRef=xxx
+ * Auto-marks the payment as SUCCESS and triggers confirmation flow.
+ *
+ * In production (FEEXPAY_API_TOKEN + FEEXPAY_SHOP_ID set), this endpoint
+ * refuses to run.
+ */
 export async function GET(req: NextRequest) {
-  const token = process.env.FLEXPAY_MERCHANT_TOKEN;
-  if (token) {
+  const token = process.env.FEEXPAY_API_TOKEN;
+  const shop = process.env.FEEXPAY_SHOP_ID;
+  if (token && shop) {
     return NextResponse.json(
       { success: false, error: "Demo endpoint disabled in production" },
       { status: 403 }
@@ -33,10 +42,14 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const txRef = `DEMO-TX-${Date.now()}`;
+  const txRef =
+    payment.feexpayReference || `DEMO-TX-${Date.now()}`;
   await db.payment.update({
     where: { id: payment.id },
-    data: { status: "SUCCESS", flexpayTransaction: txRef },
+    data: {
+      status: "SUCCESS",
+      feexpayTransaction: txRef,
+    },
   });
 
   const newStatus =
@@ -46,11 +59,15 @@ export async function GET(req: NextRequest) {
     data: { status: newStatus, paymentType: payment.type },
   });
 
+  // Fire and forget email
   sendConfirmationEmail(payment.participant.email, {
     participant: payment.participant,
-    payment: { ...payment, status: "SUCCESS", flexpayTransaction: txRef },
-  }).catch((e) => console.error("[demo-confirm] email error:", e?.message || e));
+    payment: { ...payment, status: "SUCCESS", feexpayTransaction: txRef },
+  }).catch((e) =>
+    console.error("[demo-confirm] email error:", e?.message || e)
+  );
 
+  // Redirect to confirmation page
   const redirectUrl = `/confirmation?registrationId=${encodeURIComponent(
     payment.participant.registrationId
   )}`;

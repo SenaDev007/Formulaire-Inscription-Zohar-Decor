@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     q: "Comment fonctionne le paiement en plusieurs étapes ?",
-    a: "Le processus est simple : vous remplissez d'abord le formulaire d'inscription, puis vous choisissez votre formule de paiement. Vous pouvez payer soit les 5 000 FCFA d'inscription seule (pour réserver votre place), soit les 25 000 FCFA pour l'inscription et la formation complète. Le paiement se fait via Flexpay, qui accepte MTN MoMo, Moov Money, Celtiis Cash et les cartes bancaires. Vous recevez instantanément un reçu par email et un message WhatsApp de confirmation avec votre numéro d'inscription.",
+    a: "Le processus est simple : vous remplissez d'abord le formulaire d'inscription, puis vous choisissez votre formule de paiement. Vous pouvez payer soit les 5 000 FCFA d'inscription seule (pour réserver votre place), soit les 25 000 FCFA pour l'inscription et la formation complète. Le paiement se fait via FeexPay, qui accepte MTN MoMo, Moov Money, Celtiis Cash et les cartes bancaires. Vous recevez instantanément un reçu par email et un message WhatsApp de confirmation avec votre numéro d'inscription.",
   },
   {
     q: "Que se passe-t-il après la formation ?",
