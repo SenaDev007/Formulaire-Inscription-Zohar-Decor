@@ -2,17 +2,44 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Check, Smartphone, CreditCard } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Check,
+  Smartphone,
+  CreditCard,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { PAYMENT_PROVIDERS, PAYMENT_OPTIONS } from "@/lib/constants";
 import { TRAINING_INFO } from "@/lib/email";
+import {
+  MTNMoMoLogo,
+  MoovMoneyLogo,
+  CeltiisCashLogo,
+  VisaLogo,
+  MastercardLogo,
+  FeeXPayLogo,
+} from "@/components/brand/PaymentLogos";
 import type { ParticipantSummary, PaymentSummary } from "@/app/page";
 
 type Provider = "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD";
 type PaymentType = "INSCRIPTION" | "COMPLET";
+
+const PROVIDER_COMPONENTS: Record<
+  Provider,
+  { Logo: React.FC<{ size?: number; className?: string }>; label: string; sub: string }
+> = {
+  MTN_MOMO: { Logo: MTNMoMoLogo, label: "MTN MoMo", sub: "Mobile Money" },
+  MOOV_MONEY: { Logo: MoovMoneyLogo, label: "Moov Money", sub: "Mobile Money" },
+  CELTIIS_CASH: { Logo: CeltiisCashLogo, label: "Celtiis Cash", sub: "Mobile Money" },
+  CARD: { Logo: VisaLogo, label: "Carte bancaire", sub: "Visa / Mastercard" },
+};
 
 export function PaymentSection({
   participant,
@@ -69,7 +96,7 @@ export function PaymentSection({
         title: json.demoMode ? "Mode démo" : "Paiement initié",
         description: json.demoMode
           ? "Mode démo — vous allez être redirigé pour confirmer."
-          : "Vous allez être redirigé vers FeexPay.",
+          : "Vous allez être redirigé vers FeeXPay.",
       });
       onPaymentInitiated({
         id: json.payment.id,
@@ -77,7 +104,7 @@ export function PaymentSection({
         amount: json.payment.amount,
         type: json.payment.type,
         provider: json.payment.provider,
-        feexpayTransaction: json.payment.feexpayTransaction,
+        feexpayTransaction: json.payment.feexpayReference,
         paymentUrl: json.payment.paymentUrl,
         createdAt: new Date().toISOString(),
       });
@@ -96,7 +123,7 @@ export function PaymentSection({
   return (
     <section className="py-12 sm:py-16 bg-beige/30 min-h-[calc(100vh-5rem)]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <button
             onClick={onBack}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-noir transition-colors mb-6"
@@ -109,7 +136,7 @@ export function PaymentSection({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-noir rounded-2xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            className="bg-noir rounded-2xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 premium-shadow"
           >
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#C9A227]">
@@ -152,7 +179,7 @@ export function PaymentSection({
                     onClick={() => setPaymentType(opt.id)}
                     className={`text-left rounded-xl p-4 border-2 transition-all ${
                       paymentType === opt.id
-                        ? "border-[#C9A227] bg-[#C9A227]/5"
+                        ? "border-[#C9A227] bg-[#C9A227]/5 premium-shadow"
                         : "border-beige hover:border-[#C9A227]/40"
                     }`}
                   >
@@ -189,47 +216,40 @@ export function PaymentSection({
               <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-3 block">
                 Moyen de paiement
               </Label>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {PAYMENT_PROVIDERS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setProvider(p.id)}
-                    className={`flex items-center gap-3 rounded-xl p-3 border-2 transition-all ${
-                      provider === p.id
-                        ? "border-[#C9A227] bg-[#C9A227]/5"
-                        : "border-beige hover:border-[#C9A227]/40"
-                    }`}
-                  >
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
-                      style={{
-                        backgroundColor: p.color,
-                        color: p.textColor,
-                      }}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                {PAYMENT_PROVIDERS.map((p) => {
+                  const cfg = PROVIDER_COMPONENTS[p.id as Provider];
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setProvider(p.id as Provider)}
+                      className={`flex flex-col items-center gap-2 rounded-xl p-3 border-2 transition-all ${
+                        provider === p.id
+                          ? "border-[#C9A227] bg-[#C9A227]/5 premium-shadow"
+                          : "border-beige hover:border-[#C9A227]/40"
+                      }`}
                     >
-                      {p.id === "CARD" ? (
-                        <CreditCard className="w-5 h-5" />
-                      ) : (
-                        <Smartphone className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div className="text-left min-w-0">
-                      <p className="font-semibold text-noir text-xs leading-tight">
-                        {p.label}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground leading-tight mt-0.5 truncate">
-                        {p.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-blanc">
+                        <cfg.Logo size={p.id === "CARD" ? 44 : 36} />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-semibold text-noir text-[11px] leading-tight">
+                          {cfg.label}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
+                          {cfg.sub}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Provider phone */}
               {provider !== "CARD" && (
                 <div className="mb-6">
                   <Label htmlFor="providerPhone" className="text-noir font-medium">
-                    Numéro {PAYMENT_PROVIDERS.find((p) => p.id === provider)?.label}
+                    Numéro {PROVIDER_COMPONENTS[provider].label}
                   </Label>
                   <Input
                     id="providerPhone"
@@ -244,11 +264,21 @@ export function PaymentSection({
                 </div>
               )}
 
-              {/* CTA */}
+              {provider === "CARD" && (
+                <div className="mb-6 p-4 rounded-xl bg-beige/50 border border-beige-dark/30 flex items-center gap-3">
+                  <CreditCard className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Vous serez redirigé vers la page sécurisée FeeXPay pour saisir
+                    vos informations de carte (Visa ou Mastercard).
+                  </p>
+                </div>
+              )}
+
+              {/* CTA — single unified payment button */}
               <Button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full h-14 bg-noir text-blanc hover:bg-[#1A1A1A] rounded-full font-semibold text-base"
+                className="shine-sweep relative overflow-hidden w-full h-14 bg-[#C9A227] text-noir hover:bg-[#D4AF37] rounded-full font-semibold text-base shadow-[0_8px_24px_rgba(201,162,39,0.35)] hover:shadow-[0_12px_32px_rgba(201,162,39,0.5)] transition-shadow"
               >
                 {submitting ? (
                   <>
@@ -257,16 +287,26 @@ export function PaymentSection({
                   </>
                 ) : (
                   <>
-                    Payer {formatted} FCFA
+                    <Lock className="w-4 h-4 mr-2" />
+                    Payer {formatted} FCFA via FeeXPay
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </>
                 )}
               </Button>
+
+              {/* FeeXPay trust line */}
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#C9A227]" />
+                <span>Paiement chiffré et sécurisé par</span>
+                <FeeXPayLogo size={56} />
+              </div>
             </div>
 
             {/* Right: summary */}
             <div className="lg:col-span-2">
               <div className="bg-blanc rounded-2xl premium-shadow border border-beige p-6 sticky top-24">
-                <h3 className="text-sm font-semibold text-noir uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-bold text-noir uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-[#C9A227]" />
                   Récapitulatif
                 </h3>
                 <div className="space-y-3 text-sm">
@@ -278,7 +318,7 @@ export function PaymentSection({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Participant</span>
-                    <span className="font-semibold text-noir">
+                    <span className="font-semibold text-noir text-right">
                       {participant.prenoms} {participant.nomComplet}
                     </span>
                   </div>
@@ -298,21 +338,19 @@ export function PaymentSection({
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Formule</span>
                     <span className="font-semibold text-noir">
-                      {paymentType === "COMPLET"
-                        ? "Complète"
-                        : "Inscription seule"}
+                      {paymentType === "COMPLET" ? "Complète" : "Inscription seule"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Moyen</span>
                     <span className="font-semibold text-noir text-xs">
-                      {PAYMENT_PROVIDERS.find((p) => p.id === provider)?.label}
+                      {PROVIDER_COMPONENTS[provider].label}
                     </span>
                   </div>
                   <div className="h-px bg-beige my-3" />
                   <div className="flex justify-between items-end">
                     <span className="text-muted-foreground">Total</span>
-                    <span className="text-3xl font-bold text-[#C9A227]">
+                    <span className="text-3xl font-bold gold-text-gradient">
                       {formatted}
                       <span className="text-sm font-normal text-muted-foreground ml-1">
                         FCFA
@@ -321,9 +359,12 @@ export function PaymentSection({
                   </div>
                 </div>
 
-                <div className="mt-6 p-3 rounded-lg bg-beige/50 text-xs text-muted-foreground leading-relaxed">
-                  Paiement sécurisé via FeexPay. Vous recevrez un reçu par email
-                  et un message WhatsApp de confirmation après paiement.
+                <div className="mt-6 p-3 rounded-lg bg-beige/50 text-xs text-muted-foreground leading-relaxed flex items-start gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#C9A227] flex-shrink-0 mt-0.5" />
+                  <span>
+                    Paiement sécurisé via FeeXPay. Vous recevrez un reçu par email
+                    et un message WhatsApp de confirmation après paiement.
+                  </span>
                 </div>
               </div>
             </div>

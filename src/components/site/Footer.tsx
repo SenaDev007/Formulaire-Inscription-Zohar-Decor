@@ -1,13 +1,17 @@
 "use client";
 
-import { Phone, Mail, MessageCircle, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import type { View } from "@/app/page";
 import { TRAINING_INFO } from "@/lib/email";
+import { WhatsAppIcon } from "@/components/brand/PaymentLogos";
 
 export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
   return (
-    <footer className="mt-auto bg-noir text-blanc">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-14">
+    <footer className="mt-auto bg-noir text-blanc relative overflow-hidden">
+      {/* Decorative gold glow */}
+      <div className="absolute top-0 left-1/4 w-[400px] h-[200px] bg-[#C9A227]/8 blur-[100px] rounded-full pointer-events-none" />
+
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
@@ -41,7 +45,10 @@ export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
             </h4>
             <ul className="space-y-2 text-sm text-blanc/70">
               <li>
-                <button onClick={() => onNavigate("home")} className="hover:text-[#C9A227] transition-colors">
+                <button
+                  onClick={() => onNavigate("home")}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
                   Accueil
                 </button>
               </li>
@@ -102,9 +109,9 @@ export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#25D366] text-white text-sm font-medium hover:bg-[#1DA851] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] text-white text-sm font-semibold hover:bg-[#1DA851] transition-colors premium-shadow"
             >
-              <MessageCircle className="w-4 h-4" />
+              <WhatsAppIcon size={18} className="text-white" />
               WhatsApp
             </a>
             <p className="mt-4 text-xs text-blanc/50">

@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Loader2,
   AlertCircle,
-  MessageCircle,
   Mail,
   Download,
   Home,
@@ -17,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { TRAINING_INFO } from "@/lib/email";
+import { WhatsAppIcon } from "@/components/brand/PaymentLogos";
 
 type Status = "loading" | "paid" | "pending" | "error";
 
@@ -321,9 +321,9 @@ export function ConfirmationSection({
                     href={whatsappLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-[#25D366] text-white text-sm font-semibold hover:bg-[#1DA851] transition-colors"
+                    className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-[#25D366] text-white text-sm font-semibold hover:bg-[#1DA851] transition-colors premium-shadow"
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <WhatsAppIcon size={18} className="text-white" />
                     Voir sur WhatsApp
                   </a>
                 )}

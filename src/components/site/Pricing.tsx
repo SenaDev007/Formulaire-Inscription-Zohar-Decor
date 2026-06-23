@@ -1,8 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  MTNMoMoLogo,
+  MoovMoneyLogo,
+  CeltiisCashLogo,
+  VisaLogo,
+  MastercardLogo,
+} from "@/components/brand/PaymentLogos";
 
 export function Pricing({ onRegister }: { onRegister: () => void }) {
   const tiers = [
@@ -39,23 +46,38 @@ export function Pricing({ onRegister }: { onRegister: () => void }) {
   ];
 
   return (
-    <section id="tarifs" className="py-20 bg-background">
+    <section id="tarifs" className="py-20 sm:py-24 bg-background relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <p className="text-xs font-medium text-[#C9A227] tracking-[0.3em] uppercase mb-3">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-xs font-medium text-[#C9A227] tracking-[0.3em] uppercase mb-3"
+          >
             Tarifs
-          </p>
-          <h2
-            className="text-3xl sm:text-4xl font-bold text-noir mb-4"
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-noir mb-4"
             style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
           >
             Choisissez votre formule
-          </h2>
-          <p className="text-muted-foreground text-base leading-relaxed">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-muted-foreground text-base sm:text-lg leading-relaxed"
+          >
             Un investissement modeste pour une compétence qui peut devenir une
             véritable source de revenus. Paiement en plusieurs options via
             Mobile Money ou carte bancaire.
-          </p>
+          </motion.p>
           <div className="section-divider w-32 mx-auto mt-6" />
         </div>
 
@@ -67,15 +89,15 @@ export function Pricing({ onRegister }: { onRegister: () => void }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className={`relative rounded-3xl p-8 ${
+              className={`relative rounded-3xl p-8 card-lift ${
                 tier.highlighted
-                  ? "bg-noir text-blanc premium-shadow-lg"
-                  : "bg-blanc text-noir premium-shadow border border-beige"
+                  ? "bg-noir text-blanc premium-shadow-xl border border-[#C9A227]/30"
+                  : "bg-blanc text-noir premium-shadow border border-beige hover:border-[#C9A227]/40"
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#C9A227] text-noir text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" />
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[#C9A227] text-noir text-xs font-bold tracking-[0.15em] uppercase flex items-center gap-1.5 premium-shadow">
+                  <Sparkles className="w-3.5 h-3.5" />
                   Recommandé
                 </div>
               )}
@@ -95,7 +117,7 @@ export function Pricing({ onRegister }: { onRegister: () => void }) {
                 {tier.description}
               </p>
 
-              <div className="mb-6">
+              <div className="mb-6 flex items-baseline">
                 <span className="text-5xl font-bold">{tier.price}</span>
                 <span
                   className={`ml-2 text-lg ${
@@ -131,43 +153,64 @@ export function Pricing({ onRegister }: { onRegister: () => void }) {
 
               <Button
                 onClick={onRegister}
-                className={`w-full h-12 rounded-full font-semibold ${
+                className={`shine-sweep relative overflow-hidden w-full h-14 rounded-full font-semibold text-base ${
                   tier.highlighted
-                    ? "bg-[#C9A227] text-noir hover:bg-[#D4AF37]"
+                    ? "bg-[#C9A227] text-noir hover:bg-[#D4AF37] shadow-[0_8px_24px_rgba(201,162,39,0.4)]"
                     : "bg-noir text-blanc hover:bg-[#1A1A1A]"
                 }`}
               >
                 {tier.cta}
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </motion.div>
           ))}
         </div>
 
-        {/* Payment methods */}
-        <div className="mt-12 text-center">
-          <p className="text-xs text-muted-foreground tracking-wider uppercase mb-4">
-            Paiement sécurisé via FeexPay
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {[
-              { label: "MTN MoMo", color: "#FFCC00", textColor: "#000000" },
-              { label: "Moov Money", color: "#1F4E9D", textColor: "#FFFFFF" },
-              { label: "Celtiis Cash", color: "#E2231A", textColor: "#FFFFFF" },
-              { label: "Carte bancaire", color: "#111111", textColor: "#FFFFFF" },
-            ].map((m) => (
-              <div
-                key={m.label}
-                className="px-4 py-2 rounded-lg text-xs font-semibold tracking-wide"
-                style={{
-                  backgroundColor: m.color,
-                  color: m.textColor,
-                }}
-              >
-                {m.label}
+        {/* Single payment CTA block with official provider logos */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+          className="mt-12 max-w-4xl mx-auto"
+        >
+          <div className="bg-blanc rounded-3xl p-6 sm:p-8 premium-shadow border border-beige">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-3 text-center sm:text-left">
+                <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-[#C9A227]" strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="font-bold text-noir text-base">
+                    Paiement 100% sécurisé via FeeXPay
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    MTN MoMo · Moov Money · Celtiis Cash · Visa · Mastercard
+                  </p>
+                </div>
               </div>
-            ))}
+
+              {/* Official provider logos */}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="bg-blanc rounded-lg p-1 premium-shadow border border-beige">
+                  <MTNMoMoLogo size={36} />
+                </div>
+                <div className="bg-blanc rounded-lg p-1 premium-shadow border border-beige">
+                  <MoovMoneyLogo size={36} />
+                </div>
+                <div className="bg-blanc rounded-lg p-1 premium-shadow border border-beige">
+                  <CeltiisCashLogo size={36} />
+                </div>
+                <div className="bg-blanc rounded-lg p-1 premium-shadow border border-beige">
+                  <VisaLogo size={48} />
+                </div>
+                <div className="bg-blanc rounded-lg p-1 premium-shadow border border-beige">
+                  <MastercardLogo size={48} />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

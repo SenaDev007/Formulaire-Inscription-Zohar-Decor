@@ -1,26 +1,31 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Calendar, MapPin, Users } from "lucide-react";
+import { Sparkles, Calendar, Users, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TRAINING_INFO } from "@/lib/email";
 
 export function Hero({ onRegister }: { onRegister: () => void }) {
   return (
     <section className="relative overflow-hidden bg-noir text-blanc">
-      {/* Background pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 25% 30%, #C9A227 1px, transparent 1px), radial-gradient(circle at 75% 70%, #C9A227 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-      {/* Gold glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#C9A227]/10 blur-[120px] rounded-full" />
+      {/* Background image with dark overlay */}
+      <div className="absolute inset-0">
+        <img
+          src="/hero-resin-workshop.png"
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover opacity-40"
+        />
+        {/* Gradient overlays for legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-noir via-noir/85 to-noir/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-noir via-transparent to-noir/40" />
+      </div>
 
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
+      {/* Decorative gold glow */}
+      <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#C9A227]/15 blur-[140px] rounded-full glow-pulse pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[300px] bg-[#E8C766]/10 blur-[120px] rounded-full glow-pulse pointer-events-none" style={{ animationDelay: "2s" }} />
+
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: text */}
           <div className="text-center lg:text-left">
@@ -28,7 +33,7 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C9A227]/10 border border-[#C9A227]/30 mb-6"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C9A227]/10 border border-[#C9A227]/40 backdrop-blur-sm mb-6"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C9A227]" />
               <span className="text-xs font-medium text-[#C9A227] tracking-[0.2em] uppercase">
@@ -40,19 +45,19 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight"
+              className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight text-shadow-luxe"
               style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
             >
               Formation Professionnelle
               <br />
-              <span className="gold-text-gradient">en Résine Époxy</span>
+              <span className="gold-shimmer">en Résine Époxy</span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-6 text-base sm:text-lg text-blanc/70 max-w-xl mx-auto lg:mx-0"
+              className="mt-6 text-base sm:text-lg text-blanc/80 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
               {TRAINING_INFO.subtitle} Apprenez à créer et vendre des créations
               personnalisées et uniques, faites main, qui marquent les esprits.
@@ -67,13 +72,14 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
               <Button
                 onClick={onRegister}
                 size="lg"
-                className="bg-[#C9A227] text-noir hover:bg-[#D4AF37] rounded-full px-8 h-14 text-base font-semibold tracking-wide"
+                className="shine-sweep relative overflow-hidden bg-[#C9A227] text-noir hover:bg-[#D4AF37] rounded-full px-8 h-14 text-base font-semibold tracking-wide shadow-[0_8px_24px_rgba(201,162,39,0.35)] hover:shadow-[0_12px_32px_rgba(201,162,39,0.5)] transition-shadow"
               >
                 Je m'inscris maintenant
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <a
                 href="#formation"
-                className="inline-flex items-center justify-center h-14 px-8 rounded-full border border-blanc/20 text-blanc hover:bg-blanc/5 transition-colors text-base font-medium"
+                className="inline-flex items-center justify-center h-14 px-8 rounded-full border border-blanc/30 text-blanc hover:bg-blanc/10 backdrop-blur-sm transition-all text-base font-medium"
               >
                 Voir le programme
               </a>
@@ -91,66 +97,123 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
             </motion.p>
           </div>
 
-          {/* Right: visual card */}
+          {/* Right: glass card with training details */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
             className="relative"
           >
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden premium-shadow-lg bg-blanc">
-              <img
-                src="/logo_zohar_decor.png"
-                alt="Zohar Décor"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-noir/60 via-transparent to-transparent" />
+            <div className="relative rounded-3xl overflow-hidden premium-shadow-xl backdrop-blur-md bg-blanc/10 border border-blanc/20 p-1">
+              <div className="rounded-[20px] bg-noir/60 backdrop-blur-lg p-6 sm:p-8">
+                <p className="text-xs uppercase tracking-[0.3em] text-[#C9A227] mb-6">
+                  La formation en bref
+                </p>
 
-              {/* Floating info chips */}
-              <div className="absolute bottom-6 left-6 right-6 grid grid-cols-2 gap-3">
-                <div className="bg-blanc/95 backdrop-blur-sm rounded-lg p-3 premium-shadow">
-                  <div className="flex items-center gap-2 text-noir">
-                    <Calendar className="w-4 h-4 text-[#C9A227]" />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Dates
-                      </p>
-                      <p className="text-sm font-semibold">
-                        09–11 juillet 2026
-                      </p>
-                    </div>
-                  </div>
+                <div className="space-y-5">
+                  <DetailRow
+                    icon={<Calendar className="w-5 h-5" />}
+                    label="Dates"
+                    value={`09 — 11 juillet 2026`}
+                    sub="3 jours intensifs"
+                  />
+                  <div className="h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent" />
+                  <DetailRow
+                    icon={<MapPin className="w-5 h-5" />}
+                    label="Lieu"
+                    value="Zongo 2, Cotonou"
+                    sub="Bénin"
+                  />
+                  <div className="h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent" />
+                  <DetailRow
+                    icon={<Users className="w-5 h-5" />}
+                    label="Places"
+                    value="10 seulement"
+                    sub="Pour un suivi personnalisé"
+                  />
                 </div>
-                <div className="bg-blanc/95 backdrop-blur-sm rounded-lg p-3 premium-shadow">
-                  <div className="flex items-center gap-2 text-noir">
-                    <Users className="w-4 h-4 text-[#C9A227]" />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Places
-                      </p>
-                      <p className="text-sm font-semibold">10 seulement</p>
-                    </div>
+
+                {/* Price tags */}
+                <div className="mt-8 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-blanc/5 border border-blanc/10 p-4 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50 mb-1">
+                      Inscription
+                    </p>
+                    <p className="text-2xl font-bold gold-text-gradient">
+                      5 000
+                    </p>
+                    <p className="text-[10px] text-blanc/60">FCFA</p>
+                  </div>
+                  <div className="rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/40 p-4 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#C9A227] mb-1">
+                      Complète
+                    </p>
+                    <p className="text-2xl font-bold text-blanc">25 000</p>
+                    <p className="text-[10px] text-blanc/60">FCFA</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Floating price badge */}
+            {/* Floating badge */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="absolute -top-4 -left-4 sm:-left-8 bg-[#C9A227] text-noir rounded-full px-5 py-2.5 premium-shadow-lg"
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="absolute -top-4 -left-4 sm:-left-6 bg-[#C9A227] text-noir rounded-full px-5 py-2.5 premium-shadow-xl pulse-gold flex items-center gap-2"
             >
-              <p className="text-[10px] uppercase tracking-wider font-medium">
-                Inscription
-              </p>
-              <p className="text-xl font-bold leading-none">5 000 FCFA</p>
+              <Sparkles className="w-4 h-4" />
+              <span className="text-xs font-bold tracking-wider uppercase">
+                Premium
+              </span>
             </motion.div>
           </motion.div>
         </div>
       </div>
+
+      {/* Bottom wave divider */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg
+          viewBox="0 0 1440 80"
+          className="w-full h-12 sm:h-16"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            fill="#F8F6F2"
+            d="M0,32 C240,72 480,72 720,40 C960,8 1200,8 1440,32 L1440,80 L0,80 Z"
+          />
+        </svg>
+      </div>
     </section>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub: string;
+}) {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-10 h-10 rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0 text-[#C9A227]">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50">
+          {label}
+        </p>
+        <p className="text-base font-semibold text-blanc leading-tight mt-0.5">
+          {value}
+        </p>
+        <p className="text-xs text-blanc/60 mt-0.5">{sub}</p>
+      </div>
+    </div>
   );
 }

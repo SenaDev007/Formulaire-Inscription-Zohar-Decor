@@ -7,15 +7,13 @@ export const PAYMENT_PROVIDERS = [
     description: "Paiement via MTN MoMo",
     color: "#FFCC00",
     textColor: "#000000",
-    icon: "📱",
   },
   {
     id: "MOOV_MONEY",
     label: "Moov Money",
     description: "Paiement via Moov Money",
-    color: "#1F4E9D",
+    color: "#005BAF",
     textColor: "#FFFFFF",
-    icon: "📲",
   },
   {
     id: "CELTIIS_CASH",
@@ -23,15 +21,13 @@ export const PAYMENT_PROVIDERS = [
     description: "Paiement via Celtiis Cash",
     color: "#E2231A",
     textColor: "#FFFFFF",
-    icon: "💳",
   },
   {
     id: "CARD",
     label: "Carte bancaire",
-    description: "Visa / Mastercard via FeexPay",
+    description: "Visa / Mastercard via FeeXPay",
     color: "#111111",
     textColor: "#FFFFFF",
-    icon: "💳",
   },
 ] as const;
 
@@ -106,11 +102,12 @@ export const BRAND = {
     fullFee: 25000,
     attestation: "Attestation de participation incluse.",
   },
+  // Icons are now Lucide React components defined directly in Creations.tsx
   creations: [
-    { id: "porte-cles", label: "Porte-clés", icon: "🔑" },
-    { id: "stylos", label: "Stylos personnalisés", icon: "🖊️" },
-    { id: "bijoux", label: "Bijoux", icon: "💍" },
-    { id: "blocs-notes", label: "Blocs-notes", icon: "📓" },
-    { id: "tableaux", label: "Tableaux décoratifs", icon: "🖼️" },
+    { id: "porte-cles", label: "Porte-clés" },
+    { id: "stylos", label: "Stylos personnalisés" },
+    { id: "bijoux", label: "Bijoux" },
+    { id: "blocs-notes", label: "Blocs-notes" },
+    { id: "tableaux", label: "Tableaux décoratifs" },
   ],
 };
