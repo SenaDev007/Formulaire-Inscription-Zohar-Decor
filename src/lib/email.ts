@@ -8,6 +8,13 @@ const fromEmail = process.env.EMAIL_FROM_NOREPLY || "noreply@academiahelm.com";
 const fromAddress = `${fromName} <${fromEmail}>`;
 const adminNotifyEmail = process.env.RESEND_TO_EMAIL || "";
 
+// Public URL of the WhatsApp group QR code image.
+// In production (Vercel), this resolves to /qr-whatsapp-group.jpeg on the deployed domain.
+// For emails to render the image, it MUST be a public absolute URL.
+const WHATSAPP_QR_URL =
+  (process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app") +
+  "/qr-whatsapp-group.jpeg";
+
 export const resend = apiKey ? new Resend(apiKey) : null;
 
 export const TRAINING_INFO = {
@@ -23,8 +30,9 @@ export const TRAINING_INFO = {
   inscriptionFee: 5000,
   trainingFee: 20000,
   fullFee: 25000,
-  contactPhone: process.env.CONTACT_PHONE || "+22900000000",
+  contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
+  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "2290162597692",
   whatsappGroupLink:
     process.env.WHATSAPP_GROUP_LINK ||
     "https://chat.whatsapp.com/VOTRE-LIEN-GROUPE",
@@ -130,10 +138,25 @@ export function buildConfirmationEmailHtml({
                   Échangez avec les autres participants, recevez les annonces importantes
                   et le lien Zoom / Google Meet de la formation.
                 </p>
+
+                <!-- QR Code du groupe WhatsApp -->
+                <div style="background:#FFFFFF;border-radius:12px;padding:16px;display:inline-block;margin:0 auto 14px;">
+                  <img src="${WHATSAPP_QR_URL}" alt="QR Code groupe WhatsApp Zohar Décor"
+                       width="180" height="180"
+                       style="display:block;margin:0 auto;border-radius:8px;" />
+                  <p style="margin:10px 0 0;font-size:11px;color:#666;text-align:center;">
+                    Scannez ce QR code avec votre téléphone<br/>pour rejoindre le groupe
+                  </p>
+                </div>
+
+                <br/>
                 <a href="${TRAINING_INFO.whatsappGroupLink}" target="_blank" rel="noopener noreferrer"
                    style="display:inline-block;background:#FFFFFF;color:#25D366;padding:12px 28px;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none;">
                   Rejoindre le groupe WhatsApp
                 </a>
+                <p style="margin:10px 0 0;font-size:11px;opacity:0.85;">
+                  ou cliquez sur le bouton ci-dessus si vous êtes sur mobile
+                </p>
               </div>
 
               <div style="margin:28px 0;padding:20px;background:#111111;border-radius:8px;color:#F8F6F2;">

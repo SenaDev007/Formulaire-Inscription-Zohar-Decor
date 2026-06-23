@@ -99,7 +99,7 @@ export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
               Écrivez-nous
             </h4>
             <a
-              href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "22900000000"}?text=${encodeURIComponent(
+              href={`https://wa.me/${TRAINING_INFO.whatsappNumber}?text=${encodeURIComponent(
                 "Bonjour Zohar Décor, je souhaite des informations sur la formation en résine époxy."
               )}`}
               target="_blank"
