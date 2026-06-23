@@ -152,3 +152,63 @@ Stage Summary:
   3. Connect repo to Vercel + add env vars
   4. Deploy
   5. Run /api/seed once
+
+---
+Task ID: 4
+Agent: main (Super Z)
+Task: User-requested refinements — official payment logos (researched via web), white-bg logo circles in Header/Footer, pricing clarification (3 jours inclus, single WhatsApp feature on Inscription tier), contact email update.
+
+Work Log:
+- Searched web for official MTN MoMo, Moov Money, Celtiis Cash logos via z-ai image-search
+- Downloaded 9 candidate images (3 per brand) and built HTML gallery for VLM inspection
+- Used VLM (z-ai vision CLI) to identify which candidates were clean isolated logos vs photos
+- Initial MTN candidates were all BAD (photos/screenshots), did a second targeted search
+  with query "MTN yellow logo white background brand identity" → got 3 clean candidates
+  from 1000 Logos and Logos-World.net
+- VLM verified: mtn_v2_1 GOOD (classic MTN oval on white), moov1 GOOD (orange diamond),
+  celtiis1 GOOD (blue background with text)
+- Copied 3 winning logos to /public/logos/:
+  - mtn-momo.png (MTN classic oval logo)
+  - moov-money.jpg (Moov Africa orange diamond)
+  - celtiis-cash.jpg (Celtiis Cash blue logo)
+- Rewrote src/components/brand/PaymentLogos.tsx:
+  - MTNMoMoLogo, MoovMoneyLogo, CeltiisCashLogo now use <img> tags pointing to /public/logos/*
+  - Visa, Mastercard, FeeXPay, WhatsApp keep SVG recreations (already clean)
+- Updated Header.tsx:
+  - Logo now on white circle (bg-blanc + border-2 border-[#C9A227] + p-1 padding)
+    with shadow-[0_2px_12px_rgba(201,162,39,0.18)] that expands on hover
+  - group-hover:scale-105 for subtle zoom
+  - Added Sparkles icon next to 'Résine Époxy' subtitle
+  - Each nav link now has animated gold underline (w-0 → w-1/2 on hover, 300ms)
+  - 'Je m'inscris' button: shine-sweep animation + elevated shadow that grows on hover
+- Updated Footer.tsx:
+  - Logo on white circle (bg-blanc + border-2 border-[#C9A227] + p-1)
+  - Increased size from w-10 to w-12 for better visibility
+- Updated CONTACT_EMAIL in 3 places:
+  - .env: auroretheodoraa@gmail.com
+  - .env.example: auroretheodoraa@gmail.com
+  - lib/email.ts default: auroretheodoraa@gmail.com
+- Updated Pricing.tsx tier features per user spec:
+  - Inscription (5000): removed all features except 'Accès au groupe WhatsApp des participants'
+  - Formation complète (25000): description '3 jours inclus' (was 'Inscription + 3 jours
+    de formation intensive'), removed 'Suivi post-formation (1 mois)' feature
+- Updated TrainingInfo.tsx: 'Formation complète' price column sub-text → '3 jours inclus'
+- Updated constants.ts PAYMENT_OPTIONS[COMPLET]:
+  - label: 'Inscription + Formation complète' → 'Formation complète'
+  - description: 'Inscription + 3 jours de formation' → '3 jours inclus'
+
+VLM Verification (z-ai vision CLI on screenshots):
+- Header: 'logo clearly visible on white circle background, navbar has hover underline
+  effects, gold Je m'inscris button on the right' ✅
+- Pricing: '2 tiers, 1 feature on Inscription tier, subtitle "3 jours inclus" on
+  Formation complète tier, real official-looking logos for MTN/Moov/Celtiis/Visa/Mastercard' ✅
+- Footer: 'logo on white circle background, contact email auroretheodoraa@gmail.com,
+  green WhatsApp button with official WhatsApp logo' ✅
+- Verified email exact spelling via JS extraction: 'auroretheodoraa@gmail.com' ✅
+
+Stage Summary:
+- All 6 user-requested changes complete and VLM-verified
+- Pushed to GitHub commit 54ad8af on main branch
+- 11 files modified, 3 real logo images added
+- Lint: 0 errors
+- All 3 real logos serve HTTP 200
