@@ -89,8 +89,18 @@ export default function Home() {
   const handlePaymentInitiated = (pay: PaymentSummary) => {
     setPayment(pay);
     if (pay.paymentUrl) {
-      // Open payment URL (in demo mode it's our internal /api/payment/demo-confirm)
+      // Card payment (or demo mode): redirect to the payment URL
+      // - For CARD: FeeXPay returns a hosted page URL
+      // - For DEMO: it's our internal /api/payment/demo-confirm endpoint
+      // - For MoMo in production: FeeXPay does NOT return a URL — the user
+      //   receives a USSD push on their phone, and we poll the status.
+      //   In that case, paymentUrl is null and we navigate to confirmation
+      //   which will poll until the payment is confirmed.
       window.location.href = pay.paymentUrl;
+    } else {
+      // Mobile Money (MTN, Moov, Celtiis) — no redirect, the user receives
+      // a push on their phone. Navigate to confirmation page which polls.
+      navigate("confirmation");
     }
   };
 

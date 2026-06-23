@@ -170,7 +170,7 @@ export async function GET(req: NextRequest) {
       if (mapped !== payment.status) {
         await db.payment.update({
           where: { id: payment.id },
-          data: { status: mapped },
+          data: { status: mapped, feexpayTransaction: payment.feexpayReference },
         });
         if (mapped === "SUCCESS") {
           const newStatus =
@@ -179,12 +179,26 @@ export async function GET(req: NextRequest) {
             where: { id: payment.participantId },
             data: { status: newStatus, paymentType: payment.type },
           });
-          sendConfirmationEmail(payment.participant.email, {
-            participant: payment.participant,
-            payment,
-          }).catch((e) =>
-            console.error("[webhook GET] email error:", e?.message || e)
-          );
+
+          // Reload participant to get fresh status for emails
+          const updatedParticipant = await db.participant.findUnique({
+            where: { id: payment.participantId },
+          });
+          if (updatedParticipant) {
+            sendConfirmationEmail(updatedParticipant.email, {
+              participant: updatedParticipant,
+              payment: { ...payment, status: "SUCCESS" },
+            }).catch((e) =>
+              console.error("[webhook GET] email error:", e?.message || e)
+            );
+            sendAdminNotification(
+              "PAYMENT_CONFIRMED",
+              updatedParticipant,
+              { ...payment, status: "SUCCESS" }
+            ).catch((e) =>
+              console.error("[webhook GET] admin notification error:", e?.message || e)
+            );
+          }
         }
         return NextResponse.json({
           success: true,
