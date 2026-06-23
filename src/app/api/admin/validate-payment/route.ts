@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   });
 
   const newStatus =
-    payment.type === "COMPLET" ? "PAID_FULL" : "PAID_INSCRIPTION";
+    payment.type === "FORMATION" ? "PAID_FULL" : "PAID_INSCRIPTION";
   await db.participant.update({
     where: { id: payment.participantId },
     data: { status: newStatus, paymentType: payment.type },

@@ -25,7 +25,7 @@ export const PAYMENT_PROVIDERS = [
   {
     id: "CARD",
     label: "Carte bancaire",
-    description: "Visa / Mastercard via FeeXPay",
+    description: "Visa / Mastercard via FeexPay",
     color: "#111111",
     textColor: "#FFFFFF",
   },
@@ -36,15 +36,15 @@ export type PaymentProviderId = (typeof PAYMENT_PROVIDERS)[number]["id"];
 export const PAYMENT_OPTIONS = [
   {
     id: "INSCRIPTION",
-    label: "Inscription",
+    label: "Étape 1 — Inscription",
     amount: 5000,
-    description: "Frais d'inscription only",
+    description: "Réserve votre place + accès groupe WhatsApp",
   },
   {
-    id: "COMPLET",
-    label: "Formation complète",
-    amount: 25000,
-    description: "3 jours inclus",
+    id: "FORMATION",
+    label: "Étape 2 — Frais de formation",
+    amount: 20000,
+    description: "Participation aux 3 jours de formation",
   },
 ] as const;
 
@@ -99,7 +99,6 @@ export const BRAND = {
     capacity: 10,
     inscriptionFee: 5000,
     trainingFee: 20000,
-    fullFee: 25000,
     attestation: "Attestation de participation incluse.",
   },
   // Icons are now Lucide React components defined directly in Creations.tsx

@@ -8,18 +8,10 @@ import {
   MapPin,
   Award,
   Clock,
-  CheckCircle2,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TRAINING_INFO } from "@/lib/email";
-
-const LEARN_ITEMS = [
-  "Techniques de coulage et démoulage",
-  "Coloration et inclusion d'éléments",
-  "Finitions professionnelles",
-  "Stratégies de vente et marketing",
-];
 
 export function Hero({ onRegister }: { onRegister: () => void }) {
   return (
@@ -32,17 +24,19 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
           aria-hidden="true"
           className="w-full h-full object-cover opacity-40"
         />
-        {/* Gradient overlays for legibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-noir via-noir/85 to-noir/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-noir via-transparent to-noir/40" />
       </div>
 
       {/* Decorative gold glow */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#C9A227]/15 blur-[140px] rounded-full glow-pulse pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[300px] bg-[#E8C766]/10 blur-[120px] rounded-full glow-pulse pointer-events-none" style={{ animationDelay: "2s" }} />
+      <div
+        className="absolute bottom-0 right-1/4 w-[500px] h-[300px] bg-[#E8C766]/10 blur-[120px] rounded-full glow-pulse pointer-events-none"
+        style={{ animationDelay: "2s" }}
+      />
 
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left: text */}
           <div className="text-center lg:text-left">
             <motion.div
@@ -101,7 +95,6 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
               </a>
             </motion.div>
 
-            {/* Tagline */}
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -113,102 +106,94 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
             </motion.p>
           </div>
 
-          {/* Right: comprehensive program card */}
+          {/* Right: structured program card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.3 }}
             className="relative"
           >
             <div className="relative rounded-3xl overflow-hidden premium-shadow-xl backdrop-blur-md bg-blanc/10 border border-blanc/20 p-1">
-              <div className="rounded-[20px] bg-noir/60 backdrop-blur-lg p-5 sm:p-7">
-                <p className="text-xs uppercase tracking-[0.3em] text-[#C9A227] mb-5 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  La formation en bref
-                </p>
+              <div className="rounded-[20px] bg-noir/70 backdrop-blur-lg p-6 sm:p-8">
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-6">
+                  <Sparkles className="w-4 h-4 text-[#C9A227]" />
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#C9A227] font-semibold">
+                    La formation en bref
+                  </p>
+                </div>
 
-                {/* Detail rows */}
-                <div className="space-y-4">
-                  <DetailRow
-                    icon={<Calendar className="w-5 h-5" />}
+                {/* Info grid — 2 columns, concise */}
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <InfoCard
+                    icon={<Calendar className="w-4 h-4" />}
                     label="Dates"
-                    value="09 — 11 juillet 2026"
-                    sub="Jeu · Ven · Sam"
+                    value="09–11 juillet"
+                    sub="2026"
                   />
-                  <Divider />
-                  <DetailRow
-                    icon={<Clock className="w-5 h-5" />}
+                  <InfoCard
+                    icon={<Clock className="w-4 h-4" />}
                     label="Durée"
-                    value="3 jours intensifs"
-                    sub="Pratique + théorie"
+                    value="3 jours"
+                    sub="intensifs"
                   />
-                  <Divider />
-                  <DetailRow
-                    icon={<MapPin className="w-5 h-5" />}
-                    label="Lieu"
-                    value="Zongo 2, Cotonou"
-                    sub={TRAINING_INFO.location}
-                    long
-                  />
-                  <Divider />
-                  <DetailRow
-                    icon={<Users className="w-5 h-5" />}
+                  <InfoCard
+                    icon={<Users className="w-4 h-4" />}
                     label="Places"
-                    value="10 seulement"
-                    sub="Pour un suivi personnalisé"
+                    value="10"
+                    sub="maximum"
                   />
-                  <Divider />
-                  <DetailRow
-                    icon={<Award className="w-5 h-5" />}
+                  <InfoCard
+                    icon={<Award className="w-4 h-4" />}
                     label="Attestation"
                     value="Incluse"
-                    sub="À la fin du parcours"
+                    sub="officielle"
                   />
                 </div>
 
-                {/* Price tags */}
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-blanc/5 border border-blanc/10 p-3 sm:p-4 text-center">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50 mb-1">
-                      Inscription
+                {/* Location — full width */}
+                <div className="flex items-start gap-3 bg-blanc/5 rounded-xl p-3.5 mb-5">
+                  <MapPin className="w-4 h-4 text-[#C9A227] flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider text-blanc/50 font-semibold mb-0.5">
+                      Lieu
                     </p>
-                    <p className="text-xl sm:text-2xl font-bold gold-text-gradient">
-                      5 000
+                    <p className="text-xs text-blanc/80 leading-relaxed">
+                      {TRAINING_INFO.location}
                     </p>
-                    <p className="text-[10px] text-blanc/60">FCFA</p>
-                  </div>
-                  <div className="rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/40 p-3 sm:p-4 text-center">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#C9A227] mb-1">
-                      Complète
-                    </p>
-                    <p className="text-xl sm:text-2xl font-bold text-blanc">25 000</p>
-                    <p className="text-[10px] text-blanc/60">FCFA · 3 jours inclus</p>
                   </div>
                 </div>
 
-                {/* What you'll learn */}
-                <div className="mt-6">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#C9A227] font-semibold mb-3 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Ce que vous apprendrez
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {LEARN_ITEMS.map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-2 bg-blanc/5 rounded-lg p-2.5 border border-blanc/[0.06]"
-                      >
-                        <CheckCircle2
-                          className="w-3.5 h-3.5 text-[#C9A227] flex-shrink-0 mt-0.5"
-                          strokeWidth={2.5}
-                        />
-                        <span className="text-[11px] text-blanc/80 leading-snug">
-                          {item}
-                        </span>
-                      </div>
-                    ))}
+                {/* Pricing — 2 steps */}
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="rounded-xl bg-blanc/5 border border-blanc/10 p-3.5 text-center">
+                    <p className="text-[9px] uppercase tracking-[0.15em] text-blanc/50 font-semibold mb-1">
+                      Étape 1 · Inscription
+                    </p>
+                    <p className="text-xl font-bold gold-text-gradient leading-none">
+                      5 000
+                    </p>
+                    <p className="text-[9px] text-blanc/50 mt-0.5">FCFA</p>
+                  </div>
+                  <div className="rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/40 p-3.5 text-center">
+                    <p className="text-[9px] uppercase tracking-[0.15em] text-[#C9A227] font-semibold mb-1">
+                      Étape 2 · Formation
+                    </p>
+                    <p className="text-xl font-bold text-blanc leading-none">
+                      20 000
+                    </p>
+                    <p className="text-[9px] text-blanc/60 mt-0.5">FCFA</p>
                   </div>
                 </div>
+
+                {/* CTA */}
+                <button
+                  onClick={onRegister}
+                  className="shine-sweep relative overflow-hidden w-full h-12 rounded-xl bg-[#C9A227] text-noir font-bold text-sm hover:bg-[#D4AF37] active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(201,162,39,0.3)]"
+                >
+                  Je m'inscris
+                  <ArrowRight className="w-4 h-4 ml-1.5 inline" />
+                </button>
               </div>
             </div>
 
@@ -217,10 +202,10 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.7 }}
-              className="absolute -top-4 -left-4 sm:-left-6 bg-[#C9A227] text-noir rounded-full px-5 py-2.5 premium-shadow-xl pulse-gold flex items-center gap-2"
+              className="absolute -top-3 -left-3 sm:-left-5 bg-[#C9A227] text-noir rounded-full px-4 py-2 premium-shadow-xl pulse-gold flex items-center gap-1.5"
             >
-              <Sparkles className="w-4 h-4" />
-              <span className="text-xs font-bold tracking-wider uppercase">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold tracking-wider uppercase">
                 Premium
               </span>
             </motion.div>
@@ -246,44 +231,28 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
   );
 }
 
-function Divider() {
-  return (
-    <div className="h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent" />
-  );
-}
-
-function DetailRow({
+function InfoCard({
   icon,
   label,
   value,
   sub,
-  long = false,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   sub: string;
-  long?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-4">
-      <div className="w-10 h-10 rounded-xl bg-[#C9A227]/15 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0 text-[#C9A227]">
+    <div className="flex items-center gap-2.5 bg-blanc/5 rounded-xl p-3">
+      <div className="w-8 h-8 rounded-lg bg-[#C9A227]/15 border border-[#C9A227]/30 flex items-center justify-center flex-shrink-0 text-[#C9A227]">
         {icon}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-blanc/50">
+      <div className="min-w-0">
+        <p className="text-[9px] uppercase tracking-wider text-blanc/50 font-semibold">
           {label}
         </p>
-        <p className="text-sm sm:text-base font-semibold text-blanc leading-tight mt-0.5">
-          {value}
-        </p>
-        <p
-          className={`text-xs text-blanc/60 mt-0.5 ${
-            long ? "leading-relaxed" : ""
-          }`}
-        >
-          {sub}
-        </p>
+        <p className="text-sm font-bold text-blanc leading-tight">{value}</p>
+        <p className="text-[9px] text-blanc/40">{sub}</p>
       </div>
     </div>
   );

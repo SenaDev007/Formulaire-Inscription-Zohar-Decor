@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
         if (mapped === "SUCCESS") {
           const newStatus =
-            payment.type === "COMPLET" ? "PAID_FULL" : "PAID_INSCRIPTION";
+            payment.type === "FORMATION" ? "PAID_FULL" : "PAID_INSCRIPTION";
           await db.participant.update({
             where: { id: payment.participantId },
             data: { status: newStatus, paymentType: payment.type },
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
             registrationId: payment.participant.registrationId,
             status:
               mapped === "SUCCESS"
-                ? payment.type === "COMPLET"
+                ? payment.type === "FORMATION"
                   ? "PAID_FULL"
                   : "PAID_INSCRIPTION"
                 : payment.participant.status,

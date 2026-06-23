@@ -355,7 +355,7 @@ export function ConfirmationSection({
               {formatted} FCFA
             </p>
             <p className="text-blanc/40 text-[9px]">
-              {data?.payment?.type === "COMPLET" ? "Complète" : "Inscription"}
+              {data?.payment?.type === "FORMATION" ? "Formation" : "Inscription"}
             </p>
           </div>
           <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#C9A227]/20">

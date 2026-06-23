@@ -525,7 +525,7 @@ function Step4({ form }: { form: ReturnType<typeof useForm<Step4Data>> }) {
           </p>
           <p className="text-blanc/50 text-[11px] leading-relaxed">
             Après validation, vous serez redirigé vers la page de paiement
-            sécurisé FeeXPay (MTN MoMo, Moov Money, Celtiis Cash, carte
+            sécurisé FeexPay (MTN MoMo, Moov Money, Celtiis Cash, carte
             bancaire).
           </p>
         </div>

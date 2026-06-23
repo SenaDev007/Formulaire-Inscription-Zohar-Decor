@@ -10,7 +10,7 @@ import { TRAINING_INFO } from "@/lib/email";
 
 const schema = z.object({
   participantId: z.string().min(1),
-  paymentType: z.enum(["INSCRIPTION", "COMPLET"]),
+  paymentType: z.enum(["INSCRIPTION", "FORMATION"]),
   provider: z.enum(["MTN_MOMO", "MOOV_MONEY", "CELTIIS_CASH", "CARD"]),
   providerPhone: z.string().optional().nullable(),
 });
@@ -38,12 +38,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (
-      participant.status === "PAID_INSCRIPTION" ||
-      participant.status === "PAID_FULL"
-    ) {
+    // Enforce 2-step payment process:
+    // - INSCRIPTION (5 000): available only if participant.status === "PENDING"
+    // - FORMATION (20 000): available only if participant.status === "PAID_INSCRIPTION"
+    if (paymentType === "INSCRIPTION" && participant.status !== "PENDING") {
       return NextResponse.json(
-        { success: false, error: "Ce participant a déjà payé.", participant },
+        {
+          success: false,
+          error: "Vous avez déjà payé les frais d'inscription. Procédez au paiement des frais de formation (20 000 FCFA).",
+          participant,
+        },
+        { status: 409 }
+      );
+    }
+    if (paymentType === "FORMATION" && participant.status !== "PAID_INSCRIPTION") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Vous devez d'abord payer les frais d'inscription (5 000 FCFA) avant de payer les frais de formation.",
+          participant,
+        },
+        { status: 409 }
+      );
+    }
+    if (participant.status === "PAID_FULL") {
+      return NextResponse.json(
+        { success: false, error: "Ce participant a déjà payé l'intégralité.", participant },
         { status: 409 }
       );
     }
@@ -89,8 +109,8 @@ export async function POST(req: NextRequest) {
     }
 
     const amount =
-      paymentType === "COMPLET"
-        ? TRAINING_INFO.fullFee
+      paymentType === "FORMATION"
+        ? TRAINING_INFO.trainingFee
         : TRAINING_INFO.inscriptionFee;
 
     // Create the payment record first
@@ -132,7 +152,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: init.message || "Échec d'initialisation du paiement FeeXPay",
+          error: init.message || "Échec d.initialisation du paiement FeexPay",
         },
         { status: 502 }
       );

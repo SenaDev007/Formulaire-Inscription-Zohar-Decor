@@ -147,7 +147,7 @@ export async function initFeeXPayPayment(
   if (!shopName) {
     return {
       status: "FAILED",
-      message: "Shop FeeXPay invalide — vérifiez FEEXPAY_SHOP_ID",
+      message: "Shop FeexPay invalide — vérifiez FEEXPAY_SHOP_ID",
     };
   }
 
@@ -186,7 +186,7 @@ export async function initFeeXPayPayment(
         const text = await res.text();
         return {
           status: "FAILED",
-          message: `FeeXPay HTTP ${res.status}: ${text}`,
+          message: `FeexPay HTTP ${res.status}: ${text}`,
         };
       }
       const data = await res.json();
@@ -201,7 +201,7 @@ export async function initFeeXPayPayment(
       };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      return { status: "FAILED", message: `FeeXPay init error: ${msg}` };
+      return { status: "FAILED", message: `FeexPay init error: ${msg}` };
     }
   }
 
@@ -231,7 +231,7 @@ export async function initFeeXPayPayment(
       const text = await res.text();
       return {
         status: "FAILED",
-        message: `FeeXPay HTTP ${res.status}: ${text}`,
+        message: `FeexPay HTTP ${res.status}: ${text}`,
       };
     }
     const data = await res.json();
@@ -245,7 +245,7 @@ export async function initFeeXPayPayment(
     };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { status: "FAILED", message: `FeeXPay init error: ${msg}` };
+    return { status: "FAILED", message: `FeexPay init error: ${msg}` };
   }
 }
 

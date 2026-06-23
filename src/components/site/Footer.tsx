@@ -121,13 +121,6 @@ export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
             © {new Date().getFullYear()} Zohar Décor. Tous droits réservés.
           </p>
           <div className="flex items-center gap-4 text-xs text-blanc/50">
-            <button
-              onClick={() => onNavigate("admin")}
-              className="hover:text-[#C9A227] transition-colors"
-            >
-              Espace Admin
-            </button>
-            <span className="text-blanc/20">•</span>
             <a href="#" className="hover:text-[#C9A227] transition-colors">
               Conditions d'inscription
             </a>

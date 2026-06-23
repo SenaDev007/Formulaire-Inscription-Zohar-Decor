@@ -37,7 +37,7 @@ export async function GET() {
     .filter((p) => p.type === "INSCRIPTION")
     .reduce((s, p) => s + p.amount, 0);
   const completAmount = payments
-    .filter((p) => p.type === "COMPLET")
+    .filter((p) => p.type === "FORMATION")
     .reduce((s, p) => s + p.amount, 0);
 
   const fillRate =

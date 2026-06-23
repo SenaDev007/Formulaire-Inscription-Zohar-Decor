@@ -34,7 +34,6 @@ export const TRAINING_INFO = {
   capacity: 10,
   inscriptionFee: 5000,
   trainingFee: 20000,
-  fullFee: 25000,
   contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "2290162597692",
@@ -67,9 +66,9 @@ export function buildConfirmationEmailHtml({
   const amount = payment?.amount ?? TRAINING_INFO.inscriptionFee;
   const formattedAmount = new Intl.NumberFormat("fr-FR").format(amount);
   const paymentTypeLabel =
-    payment?.type === "COMPLET"
-      ? "Inscription + Formation complète"
-      : "Frais d'inscription";
+    payment?.type === "FORMATION"
+      ? "Frais de formation (20 000 FCFA)"
+      : "Frais d'inscription (5 000 FCFA)";
 
   return `
 <!DOCTYPE html>
@@ -240,10 +239,10 @@ export function buildRegistrationConfirmationHtml({
               </p>
               <ul style="margin:8px 0 16px 20px;padding:0;color:#444;font-size:14px;line-height:1.8;">
                 <li><strong>Inscription :</strong> 5 000 FCFA (réserve votre place)</li>
-                <li><strong>Formation complète :</strong> 25 000 FCFA (3 jours inclus)</li>
+                <li><strong>Frais de formation :</strong> 20 000 FCFA (3 jours de formation)</li>
               </ul>
               <p style="margin:0 0 16px;color:#444;font-size:14px;line-height:1.6;">
-                Paiement via FeeXPay : MTN MoMo, Moov Money, Celtiis Cash, carte bancaire.
+                Paiement via FeexPay : MTN MoMo, Moov Money, Celtiis Cash, carte bancaire.
               </p>
 
               <h3 style="margin:24px 0 8px;color:#111;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Détails de la formation</h3>
@@ -418,8 +417,8 @@ export function buildAdminNotificationHtml(
   const amount = payment?.amount ?? TRAINING_INFO.inscriptionFee;
   const formattedAmount = new Intl.NumberFormat("fr-FR").format(amount);
   const paymentTypeLabel =
-    payment?.type === "COMPLET"
-      ? "Formation complète (25 000 FCFA)"
+    payment?.type === "FORMATION"
+      ? "Frais de formation (20 000 FCFA)"
       : payment?.type === "INSCRIPTION"
       ? "Inscription (5 000 FCFA)"
       : "—";

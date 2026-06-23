@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 
         if (mapped === "SUCCESS") {
           const newStatus =
-            lastPayment.type === "COMPLET" ? "PAID_FULL" : "PAID_INSCRIPTION";
+            lastPayment.type === "FORMATION" ? "PAID_FULL" : "PAID_INSCRIPTION";
           await db.participant.update({
             where: { id: participant.id },
             data: { status: newStatus, paymentType: lastPayment.type },

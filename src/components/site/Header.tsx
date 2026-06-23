@@ -30,39 +30,35 @@ export function Header({
     onNavigate("register");
     setMobileOpen(false);
   };
-  const goAdmin = () => {
-    onNavigate("admin");
-    setMobileOpen(false);
-  };
 
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-blanc/95 backdrop-blur-md shadow-[0_4px_24px_rgba(17,17,17,0.06)] border-b border-beige"
-          : "bg-blanc/80 backdrop-blur-sm"
+          ? "bg-blanc/95 backdrop-blur-md shadow-[0_2px_20px_rgba(17,17,17,0.06)] border-b border-beige/60"
+          : "bg-blanc/90 backdrop-blur-sm"
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo on white background circle */}
+        <div className="flex items-center justify-between h-16 sm:h-20">
+          {/* Logo */}
           <button
             onClick={goHome}
             className="flex items-center gap-3 group"
             aria-label="Zohar Décor - Accueil"
           >
-            <div className="relative w-14 h-14 rounded-full bg-blanc shadow-[0_2px_12px_rgba(201,162,39,0.18)] border-2 border-[#C9A227] transition-all duration-300 group-hover:shadow-[0_4px_18px_rgba(201,162,39,0.35)] group-hover:scale-105 overflow-hidden p-1">
+            <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-blanc shadow-[0_2px_12px_rgba(201,162,39,0.15)] border-2 border-[#C9A227] transition-all duration-300 group-hover:shadow-[0_4px_16px_rgba(201,162,39,0.3)] group-hover:scale-105 overflow-hidden p-0.5">
               <img
                 src="/logo_zohar_decor.png"
                 alt="Logo Zohar Décor"
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
-            <div className="hidden sm:flex flex-col items-start leading-tight">
-              <span className="font-bold text-noir text-base tracking-wider">
+            <div className="hidden sm:flex flex-col items-start leading-none">
+              <span className="font-bold text-noir text-sm sm:text-base tracking-wider">
                 ZOHAR DÉCOR
               </span>
-              <span className="text-[10px] text-[#C9A227] uppercase tracking-[0.2em] flex items-center gap-1">
+              <span className="text-[9px] sm:text-[10px] text-[#C9A227] uppercase tracking-[0.15em] flex items-center gap-1 mt-0.5">
                 <Sparkles className="w-2.5 h-2.5" />
                 Résine Époxy
               </span>
@@ -97,15 +93,9 @@ export function Header({
                 </a>
               )
             )}
-            <button
-              onClick={goAdmin}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-noir transition-colors ml-1"
-            >
-              Admin
-            </button>
             <Button
               onClick={goRegister}
-              className="shine-sweep relative overflow-hidden ml-3 bg-noir text-blanc hover:bg-[#1A1A1A] rounded-full h-11 px-6 font-semibold shadow-[0_4px_14px_rgba(17,17,17,0.18)] hover:shadow-[0_8px_22px_rgba(17,17,17,0.25)] transition-shadow"
+              className="shine-sweep relative overflow-hidden ml-3 bg-noir text-blanc hover:bg-[#1A1A1A] rounded-full h-10 px-6 text-sm font-semibold shadow-[0_4px_14px_rgba(17,17,17,0.15)] hover:shadow-[0_8px_22px_rgba(17,17,17,0.22)] transition-shadow"
             >
               Je m'inscris
             </Button>
@@ -117,7 +107,7 @@ export function Header({
             className="md:hidden p-2 text-noir rounded-lg hover:bg-beige/50 transition-colors"
             aria-label="Menu"
           >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
@@ -127,42 +117,36 @@ export function Header({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden overflow-hidden border-t border-beige"
+            className="md:hidden overflow-hidden border-t border-beige/60"
           >
             <div className="py-3 flex flex-col gap-1">
               <button
                 onClick={goHome}
-                className="px-4 py-3 text-left text-sm font-medium text-noir hover:bg-beige/50 rounded-md"
+                className="px-4 py-3 text-left text-sm font-medium text-noir hover:bg-beige/50 rounded-md transition-colors"
               >
                 Accueil
               </button>
               <a
                 href="#creations"
                 onClick={() => setMobileOpen(false)}
-                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md"
+                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md transition-colors"
               >
                 Créations
               </a>
               <a
                 href="#tarifs"
                 onClick={() => setMobileOpen(false)}
-                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md"
+                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md transition-colors"
               >
                 Tarifs
               </a>
               <a
                 href="#faq"
                 onClick={() => setMobileOpen(false)}
-                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md"
+                className="px-4 py-3 text-sm font-medium text-noir hover:bg-beige/50 rounded-md transition-colors"
               >
                 FAQ
               </a>
-              <button
-                onClick={goAdmin}
-                className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hover:bg-beige/50 rounded-md"
-              >
-                Espace Admin
-              </button>
               <Button
                 onClick={goRegister}
                 className="mt-2 bg-noir text-blanc hover:bg-[#1A1A1A] rounded-full h-12"

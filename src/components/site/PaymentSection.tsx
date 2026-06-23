@@ -33,7 +33,7 @@ import {
 import type { ParticipantSummary, PaymentSummary } from "@/app/page";
 
 type Provider = "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD";
-type PaymentType = "INSCRIPTION" | "COMPLET";
+type PaymentType = "INSCRIPTION" | "FORMATION";
 
 const PROVIDER_COMPONENTS: Record<
   Provider,
@@ -69,15 +69,20 @@ export function PaymentSection({
   onPaymentInitiated: (p: PaymentSummary) => void;
   onBack: () => void;
 }) {
-  const [paymentType, setPaymentType] = useState<PaymentType>("INSCRIPTION");
+  // Auto-determine payment step based on participant status:
+  // - PENDING → Step 1: INSCRIPTION (5 000 FCFA)
+  // - PAID_INSCRIPTION → Step 2: FORMATION (20 000 FCFA)
+  const [paymentType, setPaymentType] = useState<PaymentType>(
+    participant.status === "PAID_INSCRIPTION" ? "FORMATION" : "INSCRIPTION"
+  );
   const [provider, setProvider] = useState<Provider>("MTN_MOMO");
   const [providerPhone, setProviderPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const amount =
-    paymentType === "COMPLET"
-      ? TRAINING_INFO.fullFee
+    paymentType === "FORMATION"
+      ? TRAINING_INFO.trainingFee
       : TRAINING_INFO.inscriptionFee;
   const formatted = new Intl.NumberFormat("fr-FR").format(amount);
 
@@ -115,7 +120,7 @@ export function PaymentSection({
         title: json.demoMode ? "Mode démo" : "Paiement initié",
         description: json.demoMode
           ? "Mode démo — vous allez être redirigé pour confirmer."
-          : "Vous allez être redirigé vers FeeXPay.",
+          : "Vous allez être redirigé vers FeexPay.",
       });
       onPaymentInitiated({
         id: json.payment.id,
@@ -272,7 +277,7 @@ export function PaymentSection({
                   Formule choisie
                 </p>
                 <p className="text-[#C9A227] text-xs font-bold">
-                  {paymentType === "COMPLET" ? "Complète" : "Inscription"}
+                  {paymentType === "FORMATION" ? "Formation" : "Inscription"}
                 </p>
               </div>
               <div className="flex items-end justify-between">
@@ -287,7 +292,7 @@ export function PaymentSection({
                 </p>
               </div>
               <p className="text-blanc/40 text-[10px] mt-2">
-                {paymentType === "COMPLET" ? "3 jours inclus" : "Réserve votre place"}
+                {paymentType === "FORMATION" ? "3 jours de formation" : "Réserve votre place + groupe WhatsApp"}
               </p>
             </motion.div>
 
@@ -304,7 +309,7 @@ export function PaymentSection({
               </span>
               <span className="inline-flex items-center gap-1">
                 <Lock className="w-3.5 h-3.5 text-[#C9A227]" />
-                FeeXPay
+                FeexPay
               </span>
               <span className="inline-flex items-center gap-1">
                 <Check className="w-3.5 h-3.5 text-[#C9A227]" />
@@ -328,55 +333,47 @@ export function PaymentSection({
                 Paiement
               </h3>
               <p className="text-blanc/50 text-xs">
-                Choisissez votre formule et votre moyen de paiement.
+                {paymentType === "FORMATION"
+                  ? "Étape 2 : Frais de formation (20 000 FCFA)"
+                  : "Étape 1 : Frais d'inscription (5 000 FCFA)"}
               </p>
             </div>
 
-            {/* Payment type selection */}
-            <Label className="text-[10px] uppercase tracking-[0.08em] font-semibold text-blanc/60 mb-3 block">
-              Formule de paiement
-            </Label>
-            <div className="grid sm:grid-cols-2 gap-3 mb-6">
-              {PAYMENT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setPaymentType(opt.id)}
-                  className={`text-left rounded-xl p-4 border-2 transition-all ${
-                    paymentType === opt.id
-                      ? "border-[#C9A227] bg-[#C9A227]/[0.08]"
-                      : "border-blanc/[0.08] hover:border-[#C9A227]/40"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold text-blanc text-sm">
-                        {opt.label}
-                      </p>
-                      <p className="text-blanc/40 text-[11px] mt-1">
-                        {opt.description}
-                      </p>
-                    </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        paymentType === opt.id
-                          ? "border-[#C9A227] bg-[#C9A227]"
-                          : "border-blanc/20"
-                      }`}
-                    >
-                      {paymentType === opt.id && (
-                        <Check className="w-3 h-3 text-noir" strokeWidth={3} />
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-blanc mt-3">
-                    {new Intl.NumberFormat("fr-FR").format(opt.amount)}
-                    <span className="text-xs font-normal text-blanc/50 ml-1">
-                      FCFA
-                    </span>
+            {/* Current step card (read-only, determined by participant status) */}
+            <div className="rounded-xl p-4 border-2 border-[#C9A227] bg-[#C9A227]/[0.08] mb-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold text-blanc text-sm">
+                    {paymentType === "FORMATION"
+                      ? "Étape 2 — Frais de formation"
+                      : "Étape 1 — Inscription"}
                   </p>
-                </button>
-              ))}
+                  <p className="text-blanc/40 text-[11px] mt-1">
+                    {paymentType === "FORMATION"
+                      ? "Participation aux 3 jours de formation"
+                      : "Réserve votre place + accès groupe WhatsApp"}
+                  </p>
+                </div>
+                <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 border-[#C9A227] bg-[#C9A227]">
+                  <Check className="w-3 h-3 text-noir" strokeWidth={3} />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-blanc mt-3">
+                {formatted}
+                <span className="text-xs font-normal text-blanc/50 ml-1">
+                  FCFA
+                </span>
+              </p>
             </div>
+
+            {paymentType === "FORMATION" && (
+              <div className="mb-4 p-3 rounded-lg bg-[#C9A227]/[0.06] border border-[#C9A227]/20 flex items-center gap-2">
+                <Check className="w-4 h-4 text-[#C9A227] flex-shrink-0" strokeWidth={3} />
+                <p className="text-[11px] text-blanc/60">
+                  Inscription (5 000 FCFA) payée. Dernière étape pour participer à la formation.
+                </p>
+              </div>
+            )}
 
             {/* Provider selection */}
             <Label className="text-[10px] uppercase tracking-[0.08em] font-semibold text-blanc/60 mb-3 block">
@@ -438,7 +435,7 @@ export function PaymentSection({
               <div className="mb-6 p-4 rounded-xl bg-[#C9A227]/[0.06] border border-[#C9A227]/20 flex items-start gap-3">
                 <CreditCard className="w-5 h-5 text-[#C9A227] flex-shrink-0 mt-0.5" />
                 <p className="text-[11px] text-blanc/60 leading-relaxed">
-                  Vous serez redirigé vers la page sécurisée FeeXPay pour saisir
+                  Vous serez redirigé vers la page sécurisée FeexPay pour saisir
                   vos informations de carte (Visa ou Mastercard).
                 </p>
               </div>
@@ -458,13 +455,13 @@ export function PaymentSection({
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  Payer {formatted} FCFA via FeeXPay
+                  Payer {formatted} FCFA via FeexPay
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
 
-            {/* FeeXPay trust line */}
+            {/* FeexPay trust line */}
             <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-blanc/40">
               <ShieldCheck className="w-3.5 h-3.5 text-[#C9A227]" />
               <span>Paiement chiffré et sécurisé par</span>
