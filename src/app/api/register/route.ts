@@ -114,20 +114,18 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[register] error:", msg, e);
 
-    // Return a more helpful error message
-    let userMessage = "Erreur serveur. Réessayez.";
-    if (msg.includes("no such column") || msg.includes("does not exist")) {
-      userMessage =
-        "Erreur de base de données. L'administrateur doit exécuter la migration Prisma (db:push).";
-    } else if (msg.includes("connect") || msg.includes("ECONNREFUSED")) {
-      userMessage = "Impossible de se connecter à la base de données.";
-    } else if (msg.includes("unique constraint")) {
-      userMessage =
-        "Un inscrit avec cet email ou ce téléphone existe déjà.";
-    }
-
+    // Return the ACTUAL error message so the user can see what's wrong
     return NextResponse.json(
-      { success: false, error: userMessage, debug: msg },
+      {
+        success: false,
+        error: msg,
+        hint:
+          msg.includes("DATABASE_URL") || msg.includes("connect")
+            ? "Vérifiez que DATABASE_URL est configuré dans Vercel"
+            : msg.includes("does not exist") || msg.includes("no such")
+            ? "La base de données n'est pas migrée. Le build Vercel doit exécuter prisma db push."
+            : undefined,
+      },
       { status: 500 }
     );
   }

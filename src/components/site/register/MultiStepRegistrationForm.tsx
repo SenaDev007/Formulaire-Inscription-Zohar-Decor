@@ -146,7 +146,7 @@ export function MultiStepRegistrationForm({
         }
         toast({
           title: "Inscription impossible",
-          description: json.error || "Erreur inconnue.",
+          description: json.error || json.hint || "Erreur inconnue.",
           variant: "destructive",
         });
         return;
