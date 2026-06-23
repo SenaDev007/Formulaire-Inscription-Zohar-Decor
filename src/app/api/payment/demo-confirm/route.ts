@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { sendConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendAdminNotification } from "@/lib/email";
 
 /**
  * DEMO MODE ONLY — simulates a FeeXPay success webhook.
@@ -59,13 +59,29 @@ export async function GET(req: NextRequest) {
     data: { status: newStatus, paymentType: payment.type },
   });
 
-  // Fire and forget email
-  sendConfirmationEmail(payment.participant.email, {
-    participant: payment.participant,
-    payment: { ...payment, status: "SUCCESS", feexpayTransaction: txRef },
-  }).catch((e) =>
-    console.error("[demo-confirm] email error:", e?.message || e)
-  );
+  // Reload participant to get updated status for emails
+  const updatedParticipant = await db.participant.findUnique({
+    where: { id: payment.participantId },
+  });
+
+  // Fire and forget emails
+  if (updatedParticipant) {
+    sendConfirmationEmail(updatedParticipant.email, {
+      participant: updatedParticipant,
+      payment: { ...payment, status: "SUCCESS", feexpayTransaction: txRef },
+    }).catch((e) =>
+      console.error("[demo-confirm] email error:", e?.message || e)
+    );
+
+    // Admin notification
+    sendAdminNotification(
+      "PAYMENT_CONFIRMED",
+      updatedParticipant,
+      { ...payment, status: "SUCCESS", feexpayTransaction: txRef }
+    ).catch((e) =>
+      console.error("[demo-confirm] admin notification error:", e?.message || e)
+    );
+  }
 
   // Redirect to confirmation page
   const redirectUrl = `/confirmation?registrationId=${encodeURIComponent(

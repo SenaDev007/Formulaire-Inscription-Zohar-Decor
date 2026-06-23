@@ -6,6 +6,7 @@ const apiKey = process.env.RESEND_API_KEY;
 const fromName = process.env.EMAIL_FROM_NAME || "Zohar Décor";
 const fromEmail = process.env.EMAIL_FROM_NOREPLY || "noreply@academiahelm.com";
 const fromAddress = `${fromName} <${fromEmail}>`;
+const adminNotifyEmail = process.env.RESEND_TO_EMAIL || "";
 
 export const resend = apiKey ? new Resend(apiKey) : null;
 
@@ -206,4 +207,216 @@ export async function sendBulkEmail(
     }
   }
   return { sent, failed };
+}
+
+// ============================================================
+// ADMIN NOTIFICATION (RESEND_TO_EMAIL)
+// Sends a notification to the admin when a new registration
+// or payment confirmation occurs.
+// ============================================================
+
+type AdminNotificationType = "NEW_REGISTRATION" | "PAYMENT_CONFIRMED";
+
+export function buildAdminNotificationHtml(
+  type: AdminNotificationType,
+  participant: Participant,
+  payment?: Payment | null
+): string {
+  const isPayment = type === "PAYMENT_CONFIRMED";
+  const amount = payment?.amount ?? TRAINING_INFO.inscriptionFee;
+  const formattedAmount = new Intl.NumberFormat("fr-FR").format(amount);
+  const paymentTypeLabel =
+    payment?.type === "COMPLET"
+      ? "Formation complète (25 000 FCFA)"
+      : payment?.type === "INSCRIPTION"
+      ? "Inscription (5 000 FCFA)"
+      : "—";
+
+  const headerColor = isPayment ? "#065F46" : "#C9A227";
+  const headerBg = isPayment ? "#D1FAE5" : "#FEF3C7";
+  const title = isPayment
+    ? "💰 Paiement confirmé"
+    : "📋 Nouvelle inscription";
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>${title} — Zohar Décor Admin</title>
+</head>
+<body style="margin:0;padding:0;background:#F8F6F2;font-family:Helvetica,Arial,sans-serif;color:#111111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F6F2;min-width:100%;">
+    <tr>
+      <td align="center" style="padding:24px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #EFE8DD;border-radius:12px;overflow:hidden;">
+          <tr style="background:${headerColor};">
+            <td align="center" style="padding:20px 24px;color:#FFFFFF;">
+              <h1 style="margin:0;font-size:18px;font-weight:700;letter-spacing:1px;">ZOHAR DÉCOR — ADMIN</h1>
+              <p style="margin:4px 0 0;color:#FFFFFF;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">${title}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 24px;">
+              <div style="background:${headerBg};border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;">
+                <p style="margin:0;font-size:24px;font-weight:700;color:${headerColor};letter-spacing:2px;">
+                  ${participant.registrationId}
+                </p>
+                <p style="margin:4px 0 0;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;">
+                  Numéro d'inscription
+                </p>
+              </div>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;width:40%;">Nom complet</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.nomComplet} ${participant.prenoms}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Sexe</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.sexe === "M" ? "Masculin" : "Féminin"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Date de naissance</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.dateNaissance}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Téléphone WhatsApp</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.telWhatsApp}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Téléphone secondaire</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.telSecondaire || "—"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Email</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Ville</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.ville}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Profession</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.profession}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Niveau d'études</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.niveauEtudes}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Source</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${participant.sourceConnaissance}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Statut</td>
+                  <td style="padding:8px 0;color:${headerColor};font-size:13px;font-weight:700;">${participant.status}</td>
+                </tr>
+                ${
+                  isPayment && payment
+                    ? `
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Type de paiement</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${paymentTypeLabel}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Montant payé</td>
+                  <td style="padding:8px 0;color:${headerColor};font-size:15px;font-weight:700;">${formattedAmount} FCFA</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Moyen de paiement</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${payment.provider}</td>
+                </tr>
+                ${
+                  payment.feexpayTransaction
+                    ? `<tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Réf. transaction</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;font-family:monospace;">${payment.feexpayTransaction}</td>
+                </tr>`
+                    : ""
+                }
+                `
+                    : ""
+                }
+                <tr>
+                  <td style="padding:8px 0;color:#666;font-size:13px;">Inscrit le</td>
+                  <td style="padding:8px 0;color:#111;font-size:13px;font-weight:600;">${new Date(participant.createdAt).toLocaleString("fr-FR")}</td>
+                </tr>
+              </table>
+
+              <div style="margin-top:20px;padding:14px;background:#111111;border-radius:8px;text-align:center;">
+                <p style="margin:0;font-size:12px;color:#C9A227;text-transform:uppercase;letter-spacing:1px;">Dashboard admin</p>
+                <p style="margin:4px 0 0;font-size:13px;color:#F8F6F2;">
+                  Connectez-vous à <strong>/#admin</strong> pour gérer les inscrits
+                </p>
+              </div>
+
+              <p style="margin:20px 0 0;color:#888;font-size:11px;text-align:center;border-top:1px solid #EFE8DD;padding-top:14px;">
+                Notification automatique — Zohar Décor · ${TRAINING_INFO.slogan}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+}
+
+/**
+ * Send an admin notification email to RESEND_TO_EMAIL.
+ * Falls back to CONTACT_EMAIL if RESEND_TO_EMAIL is not set.
+ * Silently skips if neither is configured.
+ */
+export async function sendAdminNotification(
+  type: AdminNotificationType,
+  participant: Participant,
+  payment?: Payment | null
+): Promise<{ sent: boolean; error?: string }> {
+  const targetEmail = adminNotifyEmail || TRAINING_INFO.contactEmail;
+  if (!targetEmail) {
+    console.warn("[email] No RESEND_TO_EMAIL or CONTACT_EMAIL — admin notification skipped");
+    return { sent: false, error: "No admin email configured" };
+  }
+
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set — admin notification not sent to:", targetEmail);
+    return { sent: false, error: "RESEND_API_KEY not configured" };
+  }
+
+  const html = buildAdminNotificationHtml(type, participant, payment);
+  const subject = isPaymentSubject(type, participant);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: fromAddress,
+      to: targetEmail,
+      subject,
+      html,
+      // Also reply-to the participant if they have email
+      replyTo: participant.email,
+    });
+    if (error) {
+      console.error("[email] admin notification error:", error);
+      return { sent: false, error: error.message };
+    }
+    console.log(`[email] Admin notification sent to ${targetEmail}: ${subject}`);
+    return { sent: true };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[email] admin notification exception:", msg);
+    return { sent: false, error: msg };
+  }
+}
+
+function isPaymentSubject(
+  type: AdminNotificationType,
+  participant: Participant
+): string {
+  if (type === "PAYMENT_CONFIRMED") {
+    return `💰 Paiement confirmé — ${participant.registrationId} — ${participant.nomComplet}`;
+  }
+  return `📋 Nouvelle inscription — ${participant.registrationId} — ${participant.nomComplet}`;
 }

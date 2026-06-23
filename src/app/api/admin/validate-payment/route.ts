@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { sendConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendAdminNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const session = await getAdminSession();
@@ -55,6 +55,15 @@ export async function POST(req: NextRequest) {
     payment: { ...payment, status: "SUCCESS", feexpayTransaction: txRef },
   }).catch((e) =>
     console.error("[admin/validate] email error:", e?.message || e)
+  );
+
+  // Also notify admin inbox (RESEND_TO_EMAIL) about the manual validation
+  sendAdminNotification(
+    "PAYMENT_CONFIRMED",
+    { ...payment.participant, status: newStatus },
+    { ...payment, status: "SUCCESS", feexpayTransaction: txRef }
+  ).catch((e) =>
+    console.error("[admin/validate] admin notification error:", e?.message || e)
   );
 
   return NextResponse.json({ success: true });

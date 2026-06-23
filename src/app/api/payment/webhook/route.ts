@@ -6,7 +6,7 @@ import {
   mapFeeXPayStatus,
   FEEXPAY_DEMO_MODE,
 } from "@/lib/feexpay";
-import { sendConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendAdminNotification } from "@/lib/email";
 
 /**
  * FeeXPay webhook. FeeXPay calls this URL (passed as callback_url during
@@ -89,13 +89,25 @@ export async function POST(req: NextRequest) {
         data: { status: newStatus, paymentType: payment.type },
       });
 
-      // Fire and forget — email confirmation
-      sendConfirmationEmail(payment.participant.email, {
-        participant: payment.participant,
-        payment,
-      }).catch((e) =>
-        console.error("[webhook] email send error:", e?.message || e)
-      );
+      // Reload participant to get the updated status for emails
+      const updatedParticipant = await db.participant.findUnique({
+        where: { id: payment.participantId },
+      });
+
+      // Fire and forget — email confirmation to participant
+      if (updatedParticipant) {
+        sendConfirmationEmail(updatedParticipant.email, {
+          participant: updatedParticipant,
+          payment,
+        }).catch((e) =>
+          console.error("[webhook] email send error:", e?.message || e)
+        );
+
+        // Fire and forget — admin notification
+        sendAdminNotification("PAYMENT_CONFIRMED", updatedParticipant, payment).catch((e) =>
+          console.error("[webhook] admin notification error:", e?.message || e)
+        );
+      }
     }
 
     return NextResponse.json({ success: true, status: finalStatus });
