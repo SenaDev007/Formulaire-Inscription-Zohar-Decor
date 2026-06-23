@@ -1,0 +1,80 @@
+// Zohar Décor - Formation Résine Époxy
+// Prisma schema (SQLite for dev — switch datasource provider to
+// "postgresql" or "mysql" for production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Participant {
+  id                  String     @id @default(cuid())
+  registrationId      String     @unique // e.g. ZD-2026-001
+  nomComplet          String
+  prenoms             String
+  sexe                String     // "M" | "F"
+  dateNaissance       String     // stored as ISO date string for SQLite portability
+  telWhatsApp         String
+  telSecondaire       String?
+  email               String
+  ville               String
+  profession          String
+  niveauEtudes        String
+  sourceConnaissance  String
+  acceptConditions    Boolean    @default(false)
+  status              String     @default("PENDING") // PENDING | PAID_INSCRIPTION | PAID_FULL | VALIDATED | CANCELLED
+  paymentType         String?    // "INSCRIPTION" | "COMPLET"
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  payments            Payment[]
+
+  @@index([email])
+  @@index([telWhatsApp])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id                  String     @id @default(cuid())
+  participantId       String
+  participant         Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  amount              Int        // in FCFA
+  type                String     // "INSCRIPTION" (5000) | "COMPLET" (25000)
+  provider            String     // "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD" | "FLEXPAY"
+  providerPhone       String?
+  flexpayReference    String?    @unique
+  flexpayOrderNumber  String?
+  flexpayTransaction  String?
+  status              String     @default("PENDING") // PENDING | SUCCESS | FAILED | CANCELLED
+  paymentUrl          String?    // URL the user is redirected to
+  manuallyValidated   Boolean    @default(false)
+  validatedById       String?    // AdminUser id, if manually validated
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([participantId])
+  @@index([status])
+  @@index([flexpayReference])
+}
+
+model AdminUser {
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  name                String
+  passwordHash        String
+  role                String     @default("ADMIN") // ADMIN | SUPER_ADMIN
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+model Setting {
+  id                  String     @id @default(cuid())
+  key                 String     @unique
+  value               String
+  updatedAt           DateTime   @updatedAt
+}

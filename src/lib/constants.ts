@@ -1,0 +1,116 @@
+// Constants used across client and server
+
+export const PAYMENT_PROVIDERS = [
+  {
+    id: "MTN_MOMO",
+    label: "MTN Mobile Money",
+    description: "Paiement via MTN MoMo",
+    color: "#FFCC00",
+    textColor: "#000000",
+    icon: "📱",
+  },
+  {
+    id: "MOOV_MONEY",
+    label: "Moov Money",
+    description: "Paiement via Moov Money",
+    color: "#1F4E9D",
+    textColor: "#FFFFFF",
+    icon: "📲",
+  },
+  {
+    id: "CELTIIS_CASH",
+    label: "Celtiis Cash",
+    description: "Paiement via Celtiis Cash",
+    color: "#E2231A",
+    textColor: "#FFFFFF",
+    icon: "💳",
+  },
+  {
+    id: "CARD",
+    label: "Carte bancaire",
+    description: "Visa / Mastercard via Flexpay",
+    color: "#111111",
+    textColor: "#FFFFFF",
+    icon: "💳",
+  },
+] as const;
+
+export type PaymentProviderId = (typeof PAYMENT_PROVIDERS)[number]["id"];
+
+export const PAYMENT_OPTIONS = [
+  {
+    id: "INSCRIPTION",
+    label: "Inscription",
+    amount: 5000,
+    description: "Frais d'inscription only",
+  },
+  {
+    id: "COMPLET",
+    label: "Inscription + Formation complète",
+    amount: 25000,
+    description: "Inscription + 3 jours de formation",
+  },
+] as const;
+
+export type PaymentOptionId = (typeof PAYMENT_OPTIONS)[number]["id"];
+
+export const SEXE_OPTIONS = [
+  { value: "M", label: "Masculin" },
+  { value: "F", label: "Féminin" },
+] as const;
+
+export const NIVEAU_ETUDES_OPTIONS = [
+  { value: "Aucun", label: "Aucun diplôme" },
+  { value: "CEP", label: "CEP" },
+  { value: "BEPC", label: "BEPC" },
+  { value: "BAC", label: "Baccalauréat" },
+  { value: "BAC+2", label: "BAC+2 / BTS / DUT" },
+  { value: "BAC+3", label: "Licence (BAC+3)" },
+  { value: "BAC+5", label: "Master / Ingénieur (BAC+5)" },
+  { value: "Doctorat", label: "Doctorat" },
+  { value: "Autre", label: "Autre" },
+] as const;
+
+export const SOURCE_OPTIONS = [
+  { value: "Facebook", label: "Facebook" },
+  { value: "Instagram", label: "Instagram" },
+  { value: "WhatsApp", label: "WhatsApp" },
+  { value: "Ami / Proche", label: "Recommandation d'un ami ou proche" },
+  { value: "Affiche", label: "Affiche / Flyer" },
+  { value: "Radio", label: "Radio" },
+  { value: "Recherche Google", label: "Recherche Google" },
+  { value: "TikTok", label: "TikTok" },
+  { value: "Autre", label: "Autre" },
+] as const;
+
+export const BRAND = {
+  name: "Zohar Décor",
+  slogan: "Des souvenirs qui brillent à jamais",
+  gold: "#C9A227",
+  noir: "#111111",
+  blanc: "#F8F6F2",
+  beige: "#EFE8DD",
+  training: {
+    title: "FORMATION PROFESSIONNELLE EN RÉSINE ÉPOXY",
+    subtitle:
+      "Apprenez à créer et vendre des créations personnalisées en résine époxy.",
+    startDate: "09 juillet",
+    endDate: "11 juillet",
+    year: 2026,
+    duration: "3 jours de formation intensive",
+    location:
+      "Zongo 2, von Axe Beni CHC-Presdo, à 100 m du carrefour après EPP La Source, Terre Rouge en allant au CEG Nima.",
+    capacity: 10,
+    inscriptionFee: 5000,
+    trainingFee: 20000,
+    fullFee: 25000,
+    attestation: "Attestation de participation incluse.",
+  },
+  creations: [
+    { id: "porte-cles", label: "Porte-clés", icon: "🔑" },
+    { id: "stylos", label: "Stylos personnalisés", icon: "🖊️" },
+    { id: "bijoux", label: "Bijoux", icon: "💍" },
+    { id: "blocs-notes", label: "Blocs-notes", icon: "📓" },
+    { id: "tableaux", label: "Tableaux décoratifs", icon: "🖼️" },
+  ],
+};
