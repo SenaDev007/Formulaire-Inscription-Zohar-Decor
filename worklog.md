@@ -72,3 +72,83 @@ Stage Summary:
   both are stubbed and ready to swap in production
 - Admin account bootstrapped: admin@zohardecor.com / ZoharDecor2026!
 - Test data: 1 participant (DOSSOU Marie-Grace, ZD-2026-001, paid 25 000 FCFA complet)
+
+---
+Task ID: 2
+Agent: main (Super Z)
+Task: Migrate Flexpay → FeeXPay (correct name) using v2 REST API, and prepare the project for Vercel deployment.
+
+Work Log:
+- Researched FeeXPay API v2 by fetching the official PHP SDK source from
+  github.com/foxinnovs/feexpay-sdk-php (the docs at docs.feexpay.me are
+  JS-rendered SPAs and not directly extractable)
+- Discovered actual FeeXPay endpoints (verified from SDK source):
+  - GET  /api/shop/{shop}/get_shop — validates merchant shop
+  - POST /api/transactions/requesttopay/integration — Mobile Money (MTN/MOOV/CELTIIS)
+  - POST /api/transactions/card/inittransact/integration — Card (VISA/MASTERCARD)
+  - GET  /api/transactions/getrequesttopay/integration/{ref} — status check
+- Auth model is unusual: token + shop sent IN REQUEST BODY (form-encoded),
+  not as Bearer header. Documented in lib/feexpay.ts.
+- Webhook: FeeXPay callback is informational (no HMAC signature) — we ALWAYS
+  re-poll the GET status endpoint to confirm final state
+- Created new src/lib/feexpay.ts (~280 lines) with:
+  - initFeeXPayPayment (routes to MoMo or Card endpoint based on provider)
+  - checkFeeXPayStatus (polls GET endpoint)
+  - verifyFeeXPayWebhook (parses payload, extracts reference)
+  - mapFeeXPayStatus, mapProviderToReseau helpers
+  - DEMO MODE fallback when FEEXPAY_SHOP_ID or FEEXPAY_API_TOKEN is empty
+- Deleted src/lib/flexpay.ts
+- Bulk-renamed flexpay→feexpay across 9 source files (sed)
+- Updated Prisma schema: renamed Payment fields
+  (flexpayReference→feexpayReference, etc.)
+- Added comment in prisma/schema.prisma explaining SQLite→PostgreSQL switch
+  for Vercel (one-line change, documented in README)
+- Updated /api/payment/init, /api/payment/webhook, /api/payment/demo-confirm
+  to use the new FeeXPay module
+- Added bug fix: prevent duplicate pending payments (if user retries payment
+  with same type, return existing; if different type, cancel old + create new)
+- Added vercel.json with:
+  - framework: nextjs (auto-detected)
+  - buildCommand: 'prisma generate && next build' (ensures Prisma client
+    is generated before build, critical for Vercel)
+  - regions: ['cdg1'] (Paris — closest Vercel region to Bénin)
+- Rewrote .env.example with:
+  - PostgreSQL connection string examples (Vercel Postgres / Supabase / Neon)
+  - All 16 environment variables documented
+  - Clear DEMO MODE explanation
+- Rewrote README.md with full 8-step Vercel deployment guide:
+  1. Switch Prisma provider to postgresql (one-line schema change)
+  2. Create free PostgreSQL DB (3 options compared)
+  3. Connect GitHub repo to Vercel
+  4. Configure all 16 env vars (table format)
+  5. Deploy
+  6. Run /api/seed to bootstrap admin
+  7. Test full flow
+  8. Configure FeeXPay webhook URL
+- Also added domain customization instructions
+
+Verification (curl + agent-browser):
+- Registration: ZD-2026-001 created ✅
+- Payment init: PENDING payment with FeeXPay reference + demo-redirect URL ✅
+- Demo-confirm: marks SUCCESS, sets PAID_FULL, triggers email ✅
+- Confirmation API: returns full participant + payment data ✅
+- Admin login: JWT cookie set ✅
+- Admin stats: 1 total, 1 paid, 5000 FCFA encaissé, 9 places restantes ✅
+- Admin participants list: shows ZD-2026-001 with all fields ✅
+- Excel export: 18 KB valid xlsx ✅
+- PDF export: 2.4 KB valid 1-page PDF ✅
+- Homepage: 'Paiement sécurisé via FeexPay' text renders correctly ✅
+- Lint: 0 errors ✅
+
+Stage Summary:
+- FeeXPay migration COMPLETE and verified end-to-end
+- Vercel deployment preparation COMPLETE (vercel.json + README guide + env vars)
+- Pushed to GitHub: commit 85b4e94 on main branch
+- Repo: https://github.com/SenaDev007/Formulaire-Inscription-Zohar-Decor
+- 18 files changed, 874 insertions(+), 473 deletions(-)
+- Project is now ready for Vercel deployment — user just needs to:
+  1. Switch Prisma provider to postgresql (one line)
+  2. Create Vercel Postgres / Supabase / Neon DB
+  3. Connect repo to Vercel + add env vars
+  4. Deploy
+  5. Run /api/seed once
