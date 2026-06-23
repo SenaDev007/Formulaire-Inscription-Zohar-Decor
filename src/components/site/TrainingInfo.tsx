@@ -169,7 +169,7 @@ export function TrainingInfo() {
             <PriceColumn
               label="Formation complète"
               amount="25 000"
-              sub="Inscription + 3 jours inclus"
+              sub="3 jours inclus"
               highlighted={true}
             />
             <div className="hidden sm:block w-px h-24 bg-gradient-to-b from-transparent via-[#C9A227]/40 to-transparent mx-auto" />

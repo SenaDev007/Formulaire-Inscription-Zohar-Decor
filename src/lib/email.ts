@@ -23,7 +23,7 @@ export const TRAINING_INFO = {
   trainingFee: 20000,
   fullFee: 25000,
   contactPhone: process.env.CONTACT_PHONE || "+22900000000",
-  contactEmail: process.env.CONTACT_EMAIL || "contact@zohardecor.com",
+  contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
   slogan: "Des souvenirs qui brillent à jamais",
 };
 

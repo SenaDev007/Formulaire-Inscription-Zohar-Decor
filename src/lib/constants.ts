@@ -42,9 +42,9 @@ export const PAYMENT_OPTIONS = [
   },
   {
     id: "COMPLET",
-    label: "Inscription + Formation complète",
+    label: "Formation complète",
     amount: 25000,
-    description: "Inscription + 3 jours de formation",
+    description: "3 jours inclus",
   },
 ] as const;
 

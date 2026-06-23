@@ -16,11 +16,11 @@ export function Footer({ onNavigate }: { onNavigate: (v: View) => void }) {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-blanc border border-[#C9A227]/30">
+              <div className="w-12 h-12 rounded-full bg-blanc shadow-[0_2px_12px_rgba(201,162,39,0.2)] border-2 border-[#C9A227] overflow-hidden p-1">
                 <img
                   src="/logo_zohar_decor.png"
                   alt="Zohar Décor"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
               <div>

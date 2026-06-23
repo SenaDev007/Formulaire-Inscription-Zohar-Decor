@@ -1,6 +1,11 @@
 /**
- * Official-style brand SVG logos for payment providers and WhatsApp.
- * These are vector recreations respecting the official brand colors.
+ * Brand logos for payment providers and WhatsApp.
+ *
+ * MTN MoMo, Moov Money, Celtiis Cash use REAL official logos
+ * (downloaded from logos-world.net and official sources, stored in /public/logos/).
+ *
+ * Visa, Mastercard, FeeXPay, WhatsApp use clean SVG recreations
+ * with official brand colors.
  */
 
 export function WhatsAppIcon({
@@ -29,138 +34,73 @@ export function WhatsAppIcon({
   );
 }
 
+// === MTN MoMo (real image) ===
 export function MTNMoMoLogo({
   className = "",
-  size = 32,
+  size = 36,
 }: {
   className?: string;
   size?: number;
 }) {
   return (
-    <svg
-      viewBox="0 0 64 64"
+    <img
+      src="/logos/mtn-momo.png"
+      alt="MTN MoMo"
       width={size}
       height={size}
       className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <rect width="64" height="64" rx="12" fill="#FFCC00" />
-      <text
-        x="32"
-        y="38"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="14"
-        fontWeight="900"
-        fill="#000000"
-      >
-        MTN
-      </text>
-      <text
-        x="32"
-        y="52"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="9"
-        fontWeight="700"
-        fill="#000000"
-      >
-        MoMo
-      </text>
-    </svg>
+      style={{ objectFit: "contain" }}
+      loading="lazy"
+    />
   );
 }
 
+// === Moov Money (real image) ===
 export function MoovMoneyLogo({
   className = "",
-  size = 32,
+  size = 36,
 }: {
   className?: string;
   size?: number;
 }) {
   return (
-    <svg
-      viewBox="0 0 64 64"
+    <img
+      src="/logos/moov-money.jpg"
+      alt="Moov Money"
       width={size}
       height={size}
       className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <rect width="64" height="64" rx="12" fill="#005BAF" />
-      <text
-        x="32"
-        y="38"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="14"
-        fontWeight="900"
-        fill="#FFFFFF"
-      >
-        MOOV
-      </text>
-      <text
-        x="32"
-        y="52"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="9"
-        fontWeight="700"
-        fill="#FFFFFF"
-      >
-        Money
-      </text>
-    </svg>
+      style={{ objectFit: "contain" }}
+      loading="lazy"
+    />
   );
 }
 
+// === Celtiis Cash (real image) ===
 export function CeltiisCashLogo({
   className = "",
-  size = 32,
+  size = 36,
 }: {
   className?: string;
   size?: number;
 }) {
   return (
-    <svg
-      viewBox="0 0 64 64"
+    <img
+      src="/logos/celtiis-cash.jpg"
+      alt="Celtiis Cash"
       width={size}
       height={size}
       className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <rect width="64" height="64" rx="12" fill="#E2231A" />
-      <text
-        x="32"
-        y="34"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="11"
-        fontWeight="900"
-        fill="#FFFFFF"
-      >
-        CELTIIS
-      </text>
-      <text
-        x="32"
-        y="50"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="13"
-        fontWeight="900"
-        fill="#FFFFFF"
-      >
-        CASH
-      </text>
-    </svg>
+      style={{ objectFit: "contain" }}
+      loading="lazy"
+    />
   );
 }
 
+// === Visa (SVG recreation) ===
 export function VisaLogo({
   className = "",
-  size = 40,
+  size = 48,
 }: {
   className?: string;
   size?: number;
@@ -192,9 +132,10 @@ export function VisaLogo({
   );
 }
 
+// === Mastercard (SVG recreation) ===
 export function MastercardLogo({
   className = "",
-  size = 40,
+  size = 48,
 }: {
   className?: string;
   size?: number;
@@ -219,9 +160,10 @@ export function MastercardLogo({
   );
 }
 
+// === FeeXPay (SVG recreation) ===
 export function FeeXPayLogo({
   className = "",
-  size = 40,
+  size = 56,
 }: {
   className?: string;
   size?: number;
