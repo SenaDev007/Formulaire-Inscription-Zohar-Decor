@@ -285,3 +285,53 @@ Stage Summary:
 - Pushed to GitHub commit adb931a on main branch
 - Lint: 0 errors
 - API registration verified working (ZD-2026-003 created in test)
+
+---
+Task ID: 6
+Agent: main (Super Z)
+Task: Extend the SERMA-HUB-style dark premium theme to payment + confirmation pages, add confetti animation on success, verify email flow end-to-end.
+
+Work Log:
+- Installed canvas-confetti@1.9.4 + @types/canvas-confetti@1.9.0
+- Redesigned PaymentSection.tsx:
+  - Two-column layout (sticky left summary, right form card)
+  - Dark premium theme: bg-noir #111111, bg-[#1A1A1A] cards, gold #C9A227 accents
+  - LEFT panel: logo on white circle, 'Finalisez votre inscription' title,
+    registration ID badge, participant card, 2 info cards, total summary card
+    with gradient, trust badges (SSL, FeeXPay, Reçu email)
+  - RIGHT panel: formule selection (gold radio cards), provider selection
+    (4-column grid with real logos), provider phone input, single unified CTA
+    'Payer {amount} FCFA via FeeXPay' with shine-sweep + gold shadow,
+    FeeXPay trust line, accepted providers row
+- Redesigned ConfirmationSection.tsx:
+  - Full dark theme with decorative gold blobs
+  - Confetti animation (canvas-confetti): 3-second burst from left + right,
+    gold + cream + white particles, 60° and 120° angles (same as SERMA-HUB)
+  - Animated checkmark (spring animation + glow shadow)
+  - 'Félicitations {prenoms}!' title with Playfair serif
+  - Registration ID card with gradient + copy button
+  - 4-column info grid (Dates, Paiement, Email, Contact)
+  - Training details card (dates + location)
+  - WhatsApp CTA button (green #25D366) with official WhatsApp logo
+  - 'Retour à l'accueil' + 'Nouvelle inscription' buttons
+  - Loading/pending/error states all dark themed
+
+End-to-end flow tested via API:
+1. Registration: POST /api/register → ZD-2026-004 created ✅
+2. Payment init: POST /api/payment/init → demo redirect URL + FeeXPay ref ✅
+3. Webhook simulation: GET /api/payment/demo-confirm → SUCCESS ✅
+4. Participant status: PAID_FULL ✅
+5. Payment: 25000 FCFA (COMPLET) ✅
+6. FeeXPay transaction reference recorded ✅
+7. Email triggered (dev mode logs): 'Confirmation d'inscription — ZD-2026-004
+   — Zohar Décor' to payment.test@example.com ✅
+
+VLM verified register page: dark bg, two-column layout, gold accent, step
+indicator, logo on white circle ✅
+
+Stage Summary:
+- All 3 user-facing flow pages (register, payment, confirmation) now share
+  the same SERMA-HUB-style dark premium theme
+- Confetti animation on confirmation success (matching SERMA-HUB SuccessScreen)
+- Full flow verified: registration → payment → email → confirmation
+- Pushed to GitHub commit ed42858 on main branch
