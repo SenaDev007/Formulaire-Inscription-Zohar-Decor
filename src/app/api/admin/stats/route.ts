@@ -29,7 +29,8 @@ export async function GET() {
   const cancelled = await db.participant.count({
     where: { status: "CANCELLED" },
   });
-  const remaining = Math.max(0, TRAINING_INFO.capacity - total);
+  // No capacity limit — "10 places" is marketing only
+  const remaining = 999;
 
   const payments = await db.payment.findMany({
     where: { status: "SUCCESS" },
@@ -43,10 +44,8 @@ export async function GET() {
     .filter((p) => p.type === "FORMATION")
     .reduce((s, p) => s + p.amount, 0);
 
-  const fillRate =
-    TRAINING_INFO.capacity > 0
-      ? Math.round((total / TRAINING_INFO.capacity) * 100)
-      : 0;
+  // No fill rate cap — marketing says 10 but DB is unlimited
+  const fillRate = total > 0 ? 100 : 0;
 
   return NextResponse.json({
     success: true,

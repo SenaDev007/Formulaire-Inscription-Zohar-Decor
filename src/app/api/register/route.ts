@@ -44,19 +44,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const count = await db.participant.count({
-      where: { status: { notIn: ["UNPAID", "CANCELLED"] } },
-    });
-    if (count >= TRAINING_INFO.capacity) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Désolé, les 10 places disponibles sont déjà prises. Vous pouvez nous contacter pour la prochaine session.",
-        },
-        { status: 409 }
-      );
-    }
+    // No capacity restriction — "10 places" is marketing only.
+    // The database accepts unlimited registrations.
 
     const registrationId = await nextRegistrationId();
 
