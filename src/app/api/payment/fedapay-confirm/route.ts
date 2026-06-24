@@ -70,6 +70,9 @@ export async function POST(req: NextRequest) {
     });
 
     // Send emails — use await to ensure they actually send
+    console.log("[fedapay-confirm] About to send emails...");
+    console.log("[fedapay-confirm] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+    console.log("[fedapay-confirm] Payment type:", paymentType);
     if (updatedParticipant) {
       try {
         const emailResult = await sendConfirmationEmail(updatedParticipant.email, {

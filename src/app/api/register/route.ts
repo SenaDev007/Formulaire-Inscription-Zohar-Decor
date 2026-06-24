@@ -70,6 +70,9 @@ export async function POST(req: NextRequest) {
 
     // Send admin notification (email → auroretheodoraa@gmail.com)
     // Use await (not fire-and-forget) to ensure it actually sends
+    console.log("[register] About to send admin notification...");
+    console.log("[register] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+    console.log("[register] RESEND_API_KEY length:", process.env.RESEND_API_KEY?.length || 0);
     try {
       const result = await sendAdminNotification("NEW_REGISTRATION", participant);
       console.log("[register] admin notification result:", JSON.stringify(result));
