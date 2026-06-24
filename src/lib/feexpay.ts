@@ -1,37 +1,29 @@
 /**
  * FeexPay payment integration — V2 REST API.
  *
- * Verified against the official FeexPay JavaScript SDK source
- * (https://api.feexpay.me/feexpay-javascript-sdk/index.js)
+ * Documentation: https://docs.feexpay.me/?section=api-rest-integrations&version=v2
  *
- * Base URL:  https://api.feexpay.me
- * Auth:      Bearer token in Authorization header (token must start with "fp_")
- * Content:   application/json (NOT form-encoded like V1)
+ * Base URL:  https://api-v2.feexpay.me
+ * Auth:      Authorization: Bearer <api-key> (token must start with "fp_")
+ * Content:   application/json
  *
  * Endpoints (V2):
- *   GET  /api/shop/{shop}/get_shop
- *        → validates shop, returns { name, reference }
+ *   POST /api/transactions/public/requesttopay/mtn        (MTN Bénin)
+ *   POST /api/transactions/public/requesttopay/moov       (Moov Bénin)
+ *   POST /api/transactions/public/requesttopay/celtiis_bj (Celtiis Bénin)
+ *   POST /api/transactions/public/requesttopay/coris      (Coris Bénin — 2-step OTP)
  *
- *   POST /api/transactions/requesttopay/integration   (Mobile Money)
- *        headers: Authorization: Bearer {token}
- *        body (JSON): phoneNumber, amount, reseau (MTN|MOOV|CELTIIS),
- *                     shop, token, first_name, email, country, callback_info, ...
- *        → { reference, status, ... }
+ * Card payment:
+ *   POST /api/transactions/public/   (Visa/Mastercard → returns paymentUrl)
  *
- *   POST /api/transactions/public/   (Card VISA/MC)
- *        headers: Authorization: Bearer {token}
- *        body (JSON): shop, amount, currency, first_name, last_name, email,
- *                     phoneNumber, adress, city, zip, country, type_card, receiptUrl
- *        → { paymentUrl, ... }
+ * Status check:
+ *   GET /api/transactions/{reference}
  *
- *   GET  /api/transactions/getrequesttopay/integration/{reference}
- *        headers: Authorization: Bearer {token}
- *        → { status: "SUCCESSFUL"|"SUCCESS"|"PENDING"|"FAILED", reason, reference, ... }
- *
- * DEMO MODE: when FEEXPAY_API_TOKEN or FEEXPAY_SHOP_ID is not set.
+ * Body fields: phoneNumber (required, 10 digits with 229 prefix), amount (required),
+ *              shop (required), first_name, last_name, description, callback_info
  */
 
-const BASE_URL = process.env.FEEXPAY_BASE_URL || "https://api.feexpay.me";
+const BASE_URL = "https://api-v2.feexpay.me";
 const API_TOKEN = process.env.FEEXPAY_API_TOKEN || "";
 const SHOP_ID = process.env.FEEXPAY_SHOP_ID || "";
 
@@ -81,30 +73,31 @@ export type FeexPayStatusResponse = {
 };
 
 /**
- * Verify the shop is valid by calling GET /api/shop/{shop}/get_shop.
+ * Operator-specific endpoint paths (V2)
  */
-export async function verifyShop(): Promise<string | null> {
-  if (FEEXPAY_DEMO_MODE) return "Demo Shop";
-  try {
-    const res = await fetch(`${BASE_URL}/api/shop/${SHOP_ID}/get_shop`, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.name || null;
-  } catch {
-    return null;
+function getOperatorEndpoint(provider: FeexPayProvider): string | null {
+  switch (provider) {
+    case "MTN":
+      return "/api/transactions/public/requesttopay/mtn";
+    case "MOOV":
+      return "/api/transactions/public/requesttopay/moov";
+    case "CELTIIS":
+      return "/api/transactions/public/requesttopay/celtiis_bj";
+    case "VISA":
+    case "MASTERCARD":
+      return "/api/transactions/public/";
+    default:
+      return null;
   }
 }
 
 /**
- * Initiate a payment. Routes to Mobile Money or Card endpoint based on provider.
+ * Initiate a payment via FeexPay V2 API.
  *
- * V2 differences from V1:
- * - Authorization: Bearer {token} in header (not in body)
- * - Content-Type: application/json (not form-encoded)
- * - Card endpoint: /api/transactions/public/ (not /api/transactions/card/inittransact/integration)
+ * Mobile Money (MTN, Moov, Celtiis): sends a push to the customer's phone.
+ * Returns a reference that we poll for status.
+ *
+ * Card (Visa, Mastercard): returns a paymentUrl to redirect the customer to.
  */
 export async function initFeexPayPayment(
   payload: FeexPayInitRequest
@@ -126,15 +119,22 @@ export async function initFeexPayPayment(
     };
   }
 
-  // V2: No shop pre-validation needed — the init endpoint will return
-  // an error if the shop is invalid. Skipping verifyShop() avoids false
-  // negatives from the get_shop endpoint.
+  const endpoint = getOperatorEndpoint(payload.provider);
+  if (!endpoint) {
+    return {
+      status: "FAILED",
+      message: `Opérateur non supporté: ${payload.provider}`,
+    };
+  }
 
   const isCard =
     payload.provider === "VISA" || payload.provider === "MASTERCARD";
 
+  // Build request body
+  const phone = payload.phoneNumber.replace(/\D/g, "");
+
   if (isCard) {
-    // === Card payment (V2: POST /api/transactions/public/) ===
+    // === Card payment ===
     const body = {
       shop: SHOP_ID,
       amount: payload.amount,
@@ -142,17 +142,17 @@ export async function initFeexPayPayment(
       first_name: payload.cardFirstName || payload.fullName,
       last_name: payload.cardLastName || payload.fullName,
       email: payload.email,
-      phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
+      phoneNumber: phone,
       adress: payload.address || payload.city || "Cotonou",
       city: payload.city || "Cotonou",
-      zip: "00000",
+      zip: payload.zip || "00000",
       country: payload.country || "Bénin",
       receiptUrl: payload.callbackUrl,
       type_card: payload.provider,
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/api/transactions/public/`, {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,18 +162,18 @@ export async function initFeexPayPayment(
       });
       if (!res.ok) {
         const text = await res.text();
-        return {
-          status: "FAILED",
-          message: `FeexPay HTTP ${res.status}: ${text}`,
-        };
+        let errorMsg = `FeexPay HTTP ${res.status}`;
+        try {
+          const errData = JSON.parse(text);
+          errorMsg += `: ${errData.message || text}`;
+        } catch {
+          errorMsg += `: ${text}`;
+        }
+        return { status: "FAILED", message: errorMsg };
       }
       const data = await res.json();
       if (data?.paymentUrl) {
-        return {
-          status: "SUCCESS",
-          paymentUrl: data.paymentUrl,
-          raw: data,
-        };
+        return { status: "SUCCESS", paymentUrl: data.paymentUrl, raw: data };
       }
       return {
         status: "FAILED",
@@ -186,40 +186,25 @@ export async function initFeexPayPayment(
     }
   }
 
-  // === Mobile Money payment (V2: POST /api/transactions/requesttopay/integration) ===
-  // SDK sends token in BOTH the Authorization header AND the body
-  const body = {
-    phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
-    country: payload.country || "Bénin",
-    phoneNumberRight: payload.phoneNumber.replace(/\D/g, "").replace(/^229/, ""),
+  // === Mobile Money payment ===
+  const body: Record<string, unknown> = {
+    phoneNumber: phone,
     amount: payload.amount,
-    reseau: payload.provider,
     shop: SHOP_ID,
-    token: API_TOKEN,
     first_name: payload.fullName,
-    email: payload.email,
-    custom_id: payload.reference,
-    otp: "",
+    description: `Inscription Zohar Decor ${payload.reference}`,
     callback_info: payload.callbackUrl,
-    description: `Inscription Zohar Décor — ${payload.reference}`,
-    currency: payload.currency || "XOF",
-    merchant_domain: process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app",
-    merchant_ip: "",
-    payment_interface: "API",
   };
 
   try {
-    const res = await fetch(
-      `${BASE_URL}/api/transactions/requesttopay/integration`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_TOKEN}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${API_TOKEN}`,
+      },
+      body: JSON.stringify(body),
+    });
     if (!res.ok) {
       const text = await res.text();
       let errorMsg = `FeexPay HTTP ${res.status}`;
@@ -229,19 +214,19 @@ export async function initFeexPayPayment(
       } catch {
         errorMsg += `: ${text}`;
       }
-      return {
-        status: "FAILED",
-        message: errorMsg,
-      };
+      return { status: "FAILED", message: errorMsg };
     }
     const data = await res.json();
-    if (data?.message === "Network Unavailable" || data?.status === "FAILED") {
+
+    // Moov can return FAILED immediately (e.g. insufficient balance)
+    if (data?.status === "FAILED") {
       return {
         status: "FAILED",
-        message: data?.message || "Réseau indisponible",
+        message: data?.response_operator?.description?.[0] || data?.message || "Paiement échoué",
         raw: data,
       };
     }
+
     return {
       status: "SUCCESS",
       reference: data.reference,
@@ -254,9 +239,8 @@ export async function initFeexPayPayment(
 }
 
 /**
- * Check the status of a FeexPay transaction (V2).
- * Uses Authorization: Bearer header.
- * Status can be "SUCCESSFUL" or "SUCCESS" (both mean success).
+ * Check the status of a FeexPay transaction by its reference.
+ * V2 endpoint: GET /api/transactions/{reference}
  */
 export async function checkFeexPayStatus(
   reference: string
@@ -266,9 +250,7 @@ export async function checkFeexPayStatus(
   }
   try {
     const res = await fetch(
-      `${BASE_URL}/api/transactions/getrequesttopay/integration/${encodeURIComponent(
-        reference
-      )}`,
+      `${BASE_URL}/api/transactions/${encodeURIComponent(reference)}`,
       {
         method: "GET",
         headers: {
@@ -331,7 +313,7 @@ export function mapFeexPayStatus(
 }
 
 /**
- * Map our internal provider IDs to FeexPay `reseau` values.
+ * Map our internal provider IDs to FeexPay V2 operator names.
  */
 export function mapProviderToReseau(provider: string): FeexPayProvider {
   switch (provider) {
@@ -351,7 +333,7 @@ export function mapProviderToReseau(provider: string): FeexPayProvider {
   }
 }
 
-// === Backward-compatible aliases (FeeXPay → FeexPay naming) ===
+// === Backward-compatible aliases ===
 export const initFeeXPayPayment = initFeexPayPayment;
 export const checkFeeXPayStatus = checkFeexPayStatus;
 export const verifyFeeXPayWebhook = verifyFeexPayWebhook;
