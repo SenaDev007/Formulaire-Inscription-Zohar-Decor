@@ -1,99 +1,87 @@
 /**
- * FeeXPay payment integration — v2 REST API.
+ * FeexPay payment integration — V2 REST API.
  *
- * Verified against the official FeeXPay PHP SDK source
- * (github.com/foxinnovs/feexpay-sdk-php) and https://docs.feexpay.me
+ * Verified against the official FeexPay JavaScript SDK source
+ * (https://api.feexpay.me/feexpay-javascript-sdk/index.js)
  *
  * Base URL:  https://api.feexpay.me
- * Auth:      Token + shop ID are sent IN THE REQUEST BODY (form-encoded),
- *            NOT as a Bearer header. The shop/merchant ID is a separate
- *            identifier from the API token.
+ * Auth:      Bearer token in Authorization header (token must start with "fp_")
+ * Content:   application/json (NOT form-encoded like V1)
  *
- * Endpoints:
+ * Endpoints (V2):
  *   GET  /api/shop/{shop}/get_shop
- *        → validates shop, returns { name: "..." }
+ *        → validates shop, returns { name, reference }
  *
  *   POST /api/transactions/requesttopay/integration   (Mobile Money)
- *        body (form): phoneNumber, amount, reseau (MTN|MOOV|CELTIIS),
- *                     token, shop, first_name, email
- *        → { status: "FAILED"|"SUCCESS", reference: "..." }
+ *        headers: Authorization: Bearer {token}
+ *        body (JSON): phoneNumber, amount, reseau (MTN|MOOV|CELTIIS),
+ *                     shop, token, first_name, email, country, callback_info, ...
+ *        → { reference, status, ... }
  *
- *   POST /api/transactions/card/inittransact/integration   (Card VISA/MC)
- *        body (form): phone, amount, reseau (VISA|MASTERCARD),
- *                     token, shop, first_name, last_name, email,
- *                     country, address1, district, currency (XOF|USD|EUR)
- *        → { status: "FAILED"|"SUCCESS", url: "https://...", transref: "..." }
+ *   POST /api/transactions/public/   (Card VISA/MC)
+ *        headers: Authorization: Bearer {token}
+ *        body (JSON): shop, amount, currency, first_name, last_name, email,
+ *                     phoneNumber, adress, city, zip, country, type_card, receiptUrl
+ *        → { paymentUrl, ... }
  *
  *   GET  /api/transactions/getrequesttopay/integration/{reference}
- *        → { status: "PENDING"|"SUCCESS"|"FAILED",
- *            amount: number,
- *            payer: { partyId: "..." } }
+ *        headers: Authorization: Bearer {token}
+ *        → { status: "SUCCESSFUL"|"SUCCESS"|"PENDING"|"FAILED", reason, reference, ... }
  *
- * Webhook: FeeXPay calls the `callback_url` (passed during init) with the
- *          transaction reference in the payload. To confirm final status,
- *          we re-poll the GET endpoint. There is no HMAC signature — the
- *          callback is informational.
- *
- * DEMO MODE: when FEEXPAY_API_TOKEN or FEEXPAY_SHOP_ID is not set, this
- * module runs in DEMO mode:
- *   - initFeeXPayPayment returns a fake reference + redirect URL pointing
- *     to our internal /api/payment/demo-confirm endpoint
- *   - The user is redirected to that endpoint, which auto-confirms the
- *     payment for testing.
+ * DEMO MODE: when FEEXPAY_API_TOKEN or FEEXPAY_SHOP_ID is not set.
  */
 
 const BASE_URL = process.env.FEEXPAY_BASE_URL || "https://api.feexpay.me";
 const API_TOKEN = process.env.FEEXPAY_API_TOKEN || "";
 const SHOP_ID = process.env.FEEXPAY_SHOP_ID || "";
-const SANDBOX = (process.env.FEEXPAY_SANDBOX || "true") === "true";
 
 export const FEEXPAY_DEMO_MODE = !API_TOKEN || !SHOP_ID;
 
-export type FeeXPayProvider = "MTN" | "MOOV" | "CELTIIS" | "VISA" | "MASTERCARD";
+export type FeexPayProvider = "MTN" | "MOOV" | "CELTIIS" | "VISA" | "MASTERCARD";
 
-export type FeeXPayInitRequest = {
-  amount: number; // in FCFA (XOF)
-  phoneNumber: string; // customer's mobile money or card phone
-  provider: FeeXPayProvider; // MTN | MOOV | CELTIIS | VISA | MASTERCARD
-  fullName: string; // customer name (used as first_name for MoMo, split for card)
+export type FeexPayInitRequest = {
+  amount: number;
+  phoneNumber: string;
+  provider: FeexPayProvider;
+  fullName: string;
   email: string;
-  reference: string; // our internal reference (registrationId)
-  callbackUrl: string; // webhook / return URL
-  // Card-only fields
+  reference: string;
+  callbackUrl: string;
   cardFirstName?: string;
   cardLastName?: string;
   country?: string;
   address?: string;
-  district?: string;
-  currency?: string; // XOF | USD | EUR — default XOF
+  city?: string;
+  zip?: string;
+  currency?: string;
 };
 
-export type FeeXPayInitResponse = {
+export type FeexPayInitResponse = {
   status: "SUCCESS" | "FAILED";
-  reference?: string; // MoMo reference
-  transref?: string; // Card transaction reference
-  paymentUrl?: string; // Card only — URL to redirect to
+  reference?: string;
+  paymentUrl?: string;
   message?: string;
   raw?: unknown;
 };
 
-export type FeeXPayStatus =
+export type FeexPayStatus =
   | "PENDING"
   | "SUCCESS"
+  | "SUCCESSFUL"
   | "FAILED"
   | "CANCELLED"
   | "EXPIRED";
 
-export type FeeXPayStatusResponse = {
-  status: FeeXPayStatus;
+export type FeexPayStatusResponse = {
+  status: FeexPayStatus;
   amount?: number;
-  payerPartyId?: string;
+  reason?: string;
+  reference?: string;
   raw?: unknown;
 };
 
 /**
  * Verify the shop is valid by calling GET /api/shop/{shop}/get_shop.
- * Returns the merchant name on success, null on failure.
  */
 export async function verifyShop(): Promise<string | null> {
   if (FEEXPAY_DEMO_MODE) return "Demo Shop";
@@ -113,16 +101,14 @@ export async function verifyShop(): Promise<string | null> {
 /**
  * Initiate a payment. Routes to Mobile Money or Card endpoint based on provider.
  *
- * Mobile Money (MTN, MOOV, CELTIIS): asynchronous — FeeXPay sends a USSD/push
- * to the customer's phone. We get a `reference` back and must poll for status.
- *
- * Card (VISA, MASTERCARD): synchronous redirect — we get a `url` to redirect
- * the customer to. They enter card details on FeeXPay's hosted page, then are
- * redirected back to our callbackUrl.
+ * V2 differences from V1:
+ * - Authorization: Bearer {token} in header (not in body)
+ * - Content-Type: application/json (not form-encoded)
+ * - Card endpoint: /api/transactions/public/ (not /api/transactions/card/inittransact/integration)
  */
-export async function initFeeXPayPayment(
-  payload: FeeXPayInitRequest
-): Promise<FeeXPayInitResponse> {
+export async function initFeexPayPayment(
+  payload: FeexPayInitRequest
+): Promise<FeexPayInitResponse> {
   if (FEEXPAY_DEMO_MODE) {
     console.warn(
       "[feexpay] DEMO MODE — FEEXPAY_API_TOKEN or FEEXPAY_SHOP_ID not set."
@@ -133,8 +119,6 @@ export async function initFeeXPayPayment(
     return {
       status: "SUCCESS",
       reference: fakeRef,
-      transref: fakeRef,
-      // Demo redirect: our internal endpoint auto-confirms the payment
       paymentUrl: `/api/payment/demo-confirm?reference=${encodeURIComponent(
         payload.reference
       )}&feexpayRef=${encodeURIComponent(fakeRef)}`,
@@ -142,12 +126,21 @@ export async function initFeeXPayPayment(
     };
   }
 
-  // Validate shop first (optional — fail loudly if invalid)
+  // Verify token format (V2 requires fp_ prefix)
+  if (!API_TOKEN.startsWith("fp_")) {
+    return {
+      status: "FAILED",
+      message:
+        "Le token FeexPay est invalide (V2). Il doit commencer par 'fp_'. Vérifiez FEEXPAY_API_TOKEN dans vos variables d'environnement.",
+    };
+  }
+
+  // Validate shop
   const shopName = await verifyShop();
   if (!shopName) {
     return {
       status: "FAILED",
-      message: "Shop FeexPay invalide — vérifiez FEEXPAY_SHOP_ID",
+      message: `Shop FeexPay invalide — vérifiez FEEXPAY_SHOP_ID (${SHOP_ID})`,
     };
   }
 
@@ -155,33 +148,32 @@ export async function initFeeXPayPayment(
     payload.provider === "VISA" || payload.provider === "MASTERCARD";
 
   if (isCard) {
-    // === Card payment ===
-    const formData = new URLSearchParams();
-    formData.append("phone", payload.phoneNumber);
-    formData.append("amount", String(payload.amount));
-    formData.append("reseau", payload.provider);
-    formData.append("token", API_TOKEN);
-    formData.append("shop", SHOP_ID);
-    formData.append("first_name", payload.cardFirstName || payload.fullName);
-    formData.append("last_name", payload.cardLastName || payload.fullName);
-    formData.append("email", payload.email);
-    formData.append("country", payload.country || "Bénin");
-    formData.append("address1", payload.address || "Cotonou");
-    formData.append("district", payload.district || "Littoral");
-    formData.append("currency", payload.currency || "XOF");
+    // === Card payment (V2: POST /api/transactions/public/) ===
+    const body = {
+      shop: SHOP_ID,
+      amount: payload.amount,
+      currency: payload.currency || "XOF",
+      first_name: payload.cardFirstName || payload.fullName,
+      last_name: payload.cardLastName || payload.fullName,
+      email: payload.email,
+      phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
+      adress: payload.address || payload.city || "Cotonou",
+      city: payload.city || "Cotonou",
+      zip: "00000",
+      country: payload.country || "Bénin",
+      receiptUrl: payload.callbackUrl,
+      type_card: payload.provider,
+    };
 
     try {
-      const res = await fetch(
-        `${BASE_URL}/api/transactions/card/inittransact/integration`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Accept: "application/json",
-          },
-          body: formData.toString(),
-        }
-      );
+      const res = await fetch(`${BASE_URL}/api/transactions/public/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_TOKEN}`,
+        },
+        body: JSON.stringify(body),
+      });
       if (!res.ok) {
         const text = await res.text();
         return {
@@ -190,13 +182,16 @@ export async function initFeeXPayPayment(
         };
       }
       const data = await res.json();
-      if (data?.status === "FAILED") {
-        return { status: "FAILED", message: data.message || "FAILED", raw: data };
+      if (data?.paymentUrl) {
+        return {
+          status: "SUCCESS",
+          paymentUrl: data.paymentUrl,
+          raw: data,
+        };
       }
       return {
-        status: "SUCCESS",
-        transref: data.transref,
-        paymentUrl: data.url,
+        status: "FAILED",
+        message: data?.message || "Aucune URL de paiement retournée",
         raw: data,
       };
     } catch (e: unknown) {
@@ -205,15 +200,21 @@ export async function initFeeXPayPayment(
     }
   }
 
-  // === Mobile Money payment ===
-  const formData = new URLSearchParams();
-  formData.append("phoneNumber", payload.phoneNumber);
-  formData.append("amount", String(payload.amount));
-  formData.append("reseau", payload.provider);
-  formData.append("token", API_TOKEN);
-  formData.append("shop", SHOP_ID);
-  formData.append("first_name", payload.fullName);
-  formData.append("email", payload.email);
+  // === Mobile Money payment (V2: POST /api/transactions/requesttopay/integration) ===
+  const body = {
+    phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
+    amount: payload.amount,
+    reseau: payload.provider,
+    shop: SHOP_ID,
+    token: API_TOKEN,
+    first_name: payload.fullName,
+    email: payload.email,
+    country: payload.country || "Bénin",
+    callback_info: payload.callbackUrl,
+    description: `Inscription Zohar Décor — ${payload.reference}`,
+    currency: payload.currency || "XOF",
+    payment_interface: "API",
+  };
 
   try {
     const res = await fetch(
@@ -221,10 +222,10 @@ export async function initFeeXPayPayment(
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_TOKEN}`,
         },
-        body: formData.toString(),
+        body: JSON.stringify(body),
       }
     );
     if (!res.ok) {
@@ -235,8 +236,12 @@ export async function initFeeXPayPayment(
       };
     }
     const data = await res.json();
-    if (data?.status === "FAILED") {
-      return { status: "FAILED", message: data.message || "FAILED", raw: data };
+    if (data?.message === "Network Unavailable" || data?.status === "FAILED") {
+      return {
+        status: "FAILED",
+        message: data?.message || "Réseau indisponible",
+        raw: data,
+      };
     }
     return {
       status: "SUCCESS",
@@ -250,18 +255,15 @@ export async function initFeeXPayPayment(
 }
 
 /**
- * Check the status of a FeeXPay transaction by its reference.
- * For card payments, use the `transref`; for MoMo, use the `reference`.
+ * Check the status of a FeexPay transaction (V2).
+ * Uses Authorization: Bearer header.
+ * Status can be "SUCCESSFUL" or "SUCCESS" (both mean success).
  */
-export async function checkFeeXPayStatus(
+export async function checkFeexPayStatus(
   reference: string
-): Promise<FeeXPayStatusResponse> {
+): Promise<FeexPayStatusResponse> {
   if (FEEXPAY_DEMO_MODE) {
-    return {
-      status: "SUCCESS",
-      amount: 0,
-      payerPartyId: "DEMO",
-    };
+    return { status: "SUCCESS", amount: 0 };
   }
   try {
     const res = await fetch(
@@ -270,7 +272,10 @@ export async function checkFeeXPayStatus(
       )}`,
       {
         method: "GET",
-        headers: { Accept: "application/json" },
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+          Accept: "application/json",
+        },
       }
     );
     if (!res.ok) {
@@ -278,9 +283,10 @@ export async function checkFeeXPayStatus(
     }
     const data = await res.json();
     return {
-      status: (data?.status as FeeXPayStatus) || "PENDING",
+      status: (data?.status as FeexPayStatus) || "PENDING",
       amount: data?.amount,
-      payerPartyId: data?.payer?.partyId,
+      reason: data?.reason,
+      reference: data?.reference,
       raw: data,
     };
   } catch {
@@ -289,23 +295,12 @@ export async function checkFeeXPayStatus(
 }
 
 /**
- * Webhook verification. FeeXPay doesn't sign webhooks with HMAC (per the SDK
- * source we audited). The callback is informational — to confirm a payment
- * reached its final state, we always re-poll the GET status endpoint.
- *
- * In SANDBOX mode, we accept all webhooks.
+ * Webhook verification. FeexPay V2 doesn't sign webhooks with HMAC.
+ * The callback is informational — we always re-poll the GET status endpoint.
  */
-export function verifyFeeXPayWebhook(
+export function verifyFeexPayWebhook(
   body: string
 ): { valid: boolean; reference?: string } {
-  if (SANDBOX) {
-    try {
-      const data = JSON.parse(body);
-      return { valid: true, reference: data?.reference || data?.transref };
-    } catch {
-      return { valid: true };
-    }
-  }
   try {
     const data = JSON.parse(body);
     return { valid: true, reference: data?.reference || data?.transref };
@@ -315,13 +310,15 @@ export function verifyFeeXPayWebhook(
 }
 
 /**
- * Map FeeXPay status to our internal Payment.status.
+ * Map FeexPay status to our internal Payment.status.
+ * V2 uses "SUCCESSFUL" as well as "SUCCESS".
  */
-export function mapFeeXPayStatus(
-  s: FeeXPayStatus
+export function mapFeexPayStatus(
+  s: FeexPayStatus
 ): "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" {
   switch (s) {
     case "SUCCESS":
+    case "SUCCESSFUL":
       return "SUCCESS";
     case "FAILED":
       return "FAILED";
@@ -335,9 +332,9 @@ export function mapFeeXPayStatus(
 }
 
 /**
- * Map our internal provider IDs to FeeXPay `reseau` values.
+ * Map our internal provider IDs to FeexPay `reseau` values.
  */
-export function mapProviderToReseau(provider: string): FeeXPayProvider {
+export function mapProviderToReseau(provider: string): FeexPayProvider {
   switch (provider) {
     case "MTN_MOMO":
       return "MTN";
@@ -346,7 +343,7 @@ export function mapProviderToReseau(provider: string): FeeXPayProvider {
     case "CELTIIS_CASH":
       return "CELTIIS";
     case "CARD":
-      return "VISA"; // default to VISA; user can choose VISA/MASTERCARD in card flow
+      return "VISA";
     case "VISA":
     case "MASTERCARD":
       return provider;
@@ -354,3 +351,14 @@ export function mapProviderToReseau(provider: string): FeeXPayProvider {
       return "MTN";
   }
 }
+
+// === Backward-compatible aliases (FeeXPay → FeexPay naming) ===
+export const initFeeXPayPayment = initFeexPayPayment;
+export const checkFeeXPayStatus = checkFeexPayStatus;
+export const verifyFeeXPayWebhook = verifyFeexPayWebhook;
+export const mapFeeXPayStatus = mapFeexPayStatus;
+export type FeeXPayProvider = FeexPayProvider;
+export type FeeXPayInitRequest = FeexPayInitRequest;
+export type FeeXPayInitResponse = FeexPayInitResponse;
+export type FeeXPayStatus = FeexPayStatus;
+export type FeeXPayStatusResponse = FeexPayStatusResponse;
