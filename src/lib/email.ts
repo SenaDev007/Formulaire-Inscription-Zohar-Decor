@@ -265,7 +265,7 @@ export function buildRegistrationConfirmationHtml({
                 <li><strong>Frais de formation :</strong> 20 000 FCFA (3 jours de formation)</li>
               </ul>
               <p style="margin:0 0 16px;color:#444;font-size:14px;line-height:1.6;">
-                Paiement via FeexPay : MTN MoMo, Moov Money, Celtiis Cash, carte bancaire.
+                Paiement via FedaPay : MTN MoMo, Moov Money, Celtiis Cash, carte bancaire.
               </p>
 
               <h3 style="margin:24px 0 8px;color:#111;font-size:15px;text-transform:uppercase;letter-spacing:1px;">Détails de la formation</h3>

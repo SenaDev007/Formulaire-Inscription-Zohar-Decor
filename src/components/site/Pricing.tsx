@@ -42,7 +42,7 @@ export function Pricing({ onRegister, onFormation }: { onRegister: () => void; o
             className="text-muted-foreground text-base sm:text-lg leading-relaxed"
           >
             Une formation unique en résine époxy. L'inscription est obligatoire
-            et précède la formation. Paiement sécurisé via FeexPay.
+            et précède la formation. Paiement sécurisé via FedaPay.
           </motion.p>
           <div className="section-divider w-32 mx-auto mt-6" />
         </div>
@@ -195,7 +195,7 @@ export function Pricing({ onRegister, onFormation }: { onRegister: () => void; o
                   </div>
                   <div>
                     <p className="font-bold text-noir text-base">
-                      Paiement 100% sécurisé via FeexPay
+                      Paiement 100% sécurisé via FedaPay
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       MTN MoMo · Moov Money · Celtiis Cash · Visa · Mastercard

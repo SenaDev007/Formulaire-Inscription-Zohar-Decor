@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { sendConfirmationEmail, sendAdminNotification } from "@/lib/email";
 
 /**
- * DEMO MODE ONLY — simulates a FeeXPay success webhook.
+ * DEMO MODE ONLY — simulates a FedaPay success webhook.
  * Usage: GET /api/payment/demo-confirm?paymentId=xxx&reference=xxx&feexpayRef=xxx
  * Auto-marks the payment as SUCCESS and triggers confirmation flow.
  *

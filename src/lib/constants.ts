@@ -25,7 +25,7 @@ export const PAYMENT_PROVIDERS = [
   {
     id: "CARD",
     label: "Carte bancaire",
-    description: "Visa / Mastercard via FeexPay",
+    description: "Visa / Mastercard via FedaPay",
     color: "#111111",
     textColor: "#FFFFFF",
   },

@@ -4,7 +4,7 @@
  * MTN MoMo, Moov Money, Celtiis Cash use REAL official logos
  * (downloaded from logos-world.net and official sources, stored in /public/logos/).
  *
- * Visa, Mastercard, FeeXPay use clean SVG recreations
+ * Visa, Mastercard, FedaPay use clean SVG recreations
  * with official brand colors.
  *
  * WhatsApp uses the official modern glyph SVG.
@@ -175,8 +175,8 @@ export function MastercardLogo({
   );
 }
 
-// === FeeXPay (SVG recreation) ===
-export function FeeXPayLogo({
+// === FedaPay (SVG recreation) ===
+export function FedaPayLogo({
   className = "",
   size = 56,
 }: {

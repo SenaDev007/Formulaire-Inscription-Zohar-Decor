@@ -182,7 +182,7 @@ export function ConfirmationSection({
     const paymentStatus = data?.payment?.status;
     const isPaymentFailed = paymentStatus === "FAILED";
 
-    // Map FeexPay failure reasons to user-friendly messages
+    // Map FedaPay failure reasons to user-friendly messages
     let errorTitle = "Inscription introuvable";
     let errorMsg = `Le numéro ${registrationId} n'existe pas ou n'a pas pu être retrouvé.`;
 

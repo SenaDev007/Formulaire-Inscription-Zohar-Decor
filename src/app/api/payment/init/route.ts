@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import {
-  initFeeXPayPayment,
+  initFedaPayPayment,
   mapProviderToReseau,
   FEEXPAY_DEMO_MODE,
 } from "@/lib/feexpay";
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Card payments require a phone number too (FeeXPay uses it as customer phone)
+    // Card payments require a phone number too (FedaPay uses it as customer phone)
     if (!providerPhone || providerPhone.trim().length < 8) {
       return NextResponse.json(
         {
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
 
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/payment/webhook`;
 
-    const init = await initFeeXPayPayment({
+    const init = await initFedaPayPayment({
       amount,
       phoneNumber: providerPhone,
       provider: mapProviderToReseau(provider),
@@ -169,11 +169,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Persist the FeeXPay reference + payment URL
+    // Persist the FedaPay reference + payment URL
     const feexpayReference = init.reference || init.transref || null;
     let paymentUrl = init.paymentUrl || null;
 
-    // In DEMO mode, the paymentUrl returned by initFeeXPayPayment already
+    // In DEMO mode, the paymentUrl returned by initFedaPayPayment already
     // points to /api/payment/demo-confirm?reference=...&feexpayRef=...
     // We append our internal paymentId so demo-confirm can find the row.
     if (FEEXPAY_DEMO_MODE && paymentUrl) {

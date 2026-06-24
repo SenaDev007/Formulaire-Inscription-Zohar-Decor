@@ -334,12 +334,12 @@ export function mapProviderToReseau(provider: string): FeexPayProvider {
 }
 
 // === Backward-compatible aliases ===
-export const initFeeXPayPayment = initFeexPayPayment;
-export const checkFeeXPayStatus = checkFeexPayStatus;
-export const verifyFeeXPayWebhook = verifyFeexPayWebhook;
-export const mapFeeXPayStatus = mapFeexPayStatus;
-export type FeeXPayProvider = FeexPayProvider;
-export type FeeXPayInitRequest = FeexPayInitRequest;
-export type FeeXPayInitResponse = FeexPayInitResponse;
-export type FeeXPayStatus = FeexPayStatus;
-export type FeeXPayStatusResponse = FeexPayStatusResponse;
+export const initFedaPayPayment = initFeexPayPayment;
+export const checkFeedaPayStatus = checkFeexPayStatus;
+export const verifyFeedaPayWebhook = verifyFeexPayWebhook;
+export const mapFeedaPayStatus = mapFeexPayStatus;
+export type FeedaPayProvider = FeexPayProvider;
+export type FeedaPayInitRequest = FeexPayInitRequest;
+export type FeedaPayInitResponse = FeexPayInitResponse;
+export type FeedaPayStatus = FeexPayStatus;
+export type FeedaPayStatusResponse = FeexPayStatusResponse;
