@@ -116,6 +116,7 @@ export async function GET(req: NextRequest) {
           amount: lastPayment.amount,
           type: lastPayment.type,
           provider: lastPayment.provider,
+          providerPhone: lastPayment.providerPhone,
           feexpayTransaction: lastPayment.feexpayTransaction,
           paymentUrl: lastPayment.paymentUrl,
           createdAt: lastPayment.createdAt,

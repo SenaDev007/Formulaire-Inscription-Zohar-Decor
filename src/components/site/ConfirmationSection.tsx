@@ -169,6 +169,24 @@ export function ConfirmationSection({
 
   // === Error state ===
   if (status === "error") {
+    // Determine the specific error reason
+    const paymentStatus = data?.payment?.status;
+    const isPaymentFailed = paymentStatus === "FAILED";
+
+    // Map FeexPay failure reasons to user-friendly messages
+    let errorTitle = "Inscription introuvable";
+    let errorMsg = `Le numéro ${registrationId} n'existe pas ou n'a pas pu être retrouvé.`;
+
+    if (isPaymentFailed) {
+      errorTitle = "Paiement échoué";
+      errorMsg =
+        "Votre paiement n'a pas abouti. Vérifiez que :\n" +
+        "• Votre numéro est bien enregistré au Mobile Money (MTN, Moov ou Celtiis)\n" +
+        "• Votre solde est suffisant\n" +
+        "• Vous n'avez pas de limite bloquant les transactions\n\n" +
+        "Réessayez avec un autre numéro ou un autre moyen de paiement.";
+    }
+
     return (
       <section className="min-h-screen bg-noir flex items-center justify-center px-4">
         <motion.div
@@ -178,19 +196,26 @@ export function ConfirmationSection({
         >
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
           <h2 className="text-xl font-bold text-blanc mt-4">
-            {data?.payment?.status === "FAILED" ? "Paiement échoué" : "Inscription introuvable"}
+            {errorTitle}
           </h2>
-          <p className="text-sm text-blanc/60 mt-2">
-            {data?.payment?.status === "FAILED"
-              ? "Votre paiement n'a pas abouti. Cela peut être dû à un solde insuffisant ou un numéro non enregistré au Mobile Money. Réessayez avec un autre numéro ou un autre moyen de paiement."
-              : `Le numéro ${registrationId} n'existe pas ou n'a pas pu être retrouvé.`}
+          <p className="text-sm text-blanc/60 mt-2 whitespace-pre-line">
+            {errorMsg}
           </p>
-          <Button
-            onClick={onBackHome}
-            className="mt-6 bg-[#C9A227] text-noir hover:bg-[#D4AF37] rounded-full"
-          >
-            Retour à l'accueil
-          </Button>
+          <div className="mt-6 space-y-3">
+            <Button
+              onClick={() => window.history.back()}
+              className="w-full bg-[#C9A227] text-noir hover:bg-[#D4AF37] rounded-full"
+            >
+              Réessayer le paiement
+            </Button>
+            <Button
+              onClick={onBackHome}
+              variant="outline"
+              className="w-full rounded-full border-blanc/20 text-blanc hover:bg-blanc/5"
+            >
+              Retour à l'accueil
+            </Button>
+          </div>
         </motion.div>
       </section>
     );

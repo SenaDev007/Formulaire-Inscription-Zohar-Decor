@@ -120,7 +120,9 @@ export function PaymentSection({
         title: json.demoMode ? "Mode démo" : "Paiement initié",
         description: json.demoMode
           ? "Mode démo — vous allez être redirigé pour confirmer."
-          : "Vous allez être redirigé vers FeexPay.",
+          : provider === "CARD"
+          ? "Vous allez être redirigé vers FeexPay."
+          : "Confirmez le paiement sur votre téléphone.",
       });
       onPaymentInitiated({
         id: json.payment.id,
