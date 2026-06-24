@@ -161,24 +161,6 @@ export function MultiStepRegistrationForm({
         status: json.participant.status,
         paymentType: json.participant.paymentType,
       });
-
-      // SERMA-HUB pattern: save participantId in localStorage and redirect to FedaPay
-      const FEDAPAY_CHECKOUT_URL = process.env.NEXT_PUBLIC_FEDAPAY_CHECKOUT_URL || "";
-      if (FEDAPAY_CHECKOUT_URL) {
-        // Save participantId for after payment redirect
-        try {
-          localStorage.setItem("zd_pending_payment", JSON.stringify({
-            participantId: json.participant.id,
-            registrationId: json.participant.registrationId,
-            prenoms: json.participant.prenoms,
-          }));
-        } catch { /* ignore */ }
-
-        // Redirect to FedaPay checkout
-        const returnUrl = `${window.location.origin}/?payment=success`;
-        const separator = FEDAPAY_CHECKOUT_URL.includes("?") ? "&" : "?";
-        window.location.href = `${FEDAPAY_CHECKOUT_URL}${separator}redirect_url=${encodeURIComponent(returnUrl)}`;
-      }
     } catch (e) {
       console.error(e);
       toast({

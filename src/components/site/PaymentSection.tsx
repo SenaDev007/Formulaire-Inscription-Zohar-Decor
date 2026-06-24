@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -11,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { TRAINING_INFO } from "@/lib/email";
 import {
@@ -22,6 +22,23 @@ import {
   MastercardLogo,
 } from "@/components/brand/PaymentLogos";
 import type { ParticipantSummary } from "@/app/page";
+
+// FedaPay checkout.js types
+declare global {
+  interface Window {
+    FedaPay?: {
+      init: (selector: string | object, options: {
+        public_key: string;
+        transaction?: { amount: number; description: string };
+        customer?: { email?: string; firstname?: string; lastname?: string };
+        onComplete?: (e: any) => void;
+        container?: string;
+      }) => any;
+    };
+  }
+}
+
+const FEDAPAY_PUBLIC_KEY = process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY || "";
 
 const SIDEBAR_ITEMS = [
   {
@@ -47,36 +64,139 @@ export function PaymentSection({
   onPaymentInitiated: (p: any) => void;
   onBack: () => void;
 }) {
+  const payBtnRef = useRef<HTMLButtonElement>(null);
   const { toast } = useToast();
 
-  // Auto-determine payment step based on participant status
   const isStep2 = participant.status === "PAID_INSCRIPTION";
   const amount = isStep2 ? TRAINING_INFO.trainingFee : TRAINING_INFO.inscriptionFee;
   const formatted = new Intl.NumberFormat("fr-FR").format(amount);
 
+  // Load FedaPay checkout.js script
+  useEffect(() => {
+    if (!FEDAPAY_PUBLIC_KEY) return;
+    const existing = document.querySelector('script[src*="fedapay.com/checkout.js"]');
+    if (existing) return;
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.fedapay.com/checkout.js?v=1.1.7";
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+
   const handlePay = () => {
-    const checkoutUrl = process.env.NEXT_PUBLIC_FEDAPAY_CHECKOUT_URL || "";
-    if (!checkoutUrl) {
+    if (!FEDAPAY_PUBLIC_KEY) {
       toast({
         title: "Paiement indisponible",
-        description: "Le lien de paiement n'est pas encore configuré. Contactez-nous.",
+        description: "La clé FedaPay n'est pas configurée. Contactez-nous.",
         variant: "destructive",
       });
       return;
     }
 
-    // Build return URL — FedaPay will redirect here after payment
-    const returnUrl = `${window.location.origin}/?payment=success&participantId=${participant.id}`;
-    const separator = checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = `${checkoutUrl}${separator}redirect_url=${encodeURIComponent(returnUrl)}`;
+    if (!window.FedaPay) {
+      toast({
+        title: "Chargement",
+        description: "Le système de paiement se charge, réessayez dans un instant.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Redirection vers FedaPay",
-      description: "Vous allez être redirigé vers la page de paiement sécurisée.",
+    // Initialize FedaPay checkout
+    const widget = window.FedaPay.init({
+      public_key: FEDAPAY_PUBLIC_KEY,
+      transaction: {
+        amount: amount,
+        description: isStep2
+          ? `Frais de formation — ${participant.registrationId}`
+          : `Frais d'inscription — ${participant.registrationId}`,
+      },
+      customer: {
+        email: participant.email,
+        firstname: participant.prenoms,
+        lastname: participant.nomComplet,
+      },
+      onComplete: (e: any) => {
+        // Payment completed (success or cancelled)
+        if (e?.reason === "DIALOG DISMISSED" || e?.reason === "USERCANCELLED") {
+          toast({
+            title: "Paiement annulé",
+            description: "Vous avez fermé la fenêtre de paiement.",
+          });
+          return;
+        }
+
+        // Payment successful — save to localStorage and confirm
+        try {
+          localStorage.setItem("zd_pending_payment", JSON.stringify({
+            participantId: participant.id,
+            registrationId: participant.registrationId,
+            prenoms: participant.prenoms,
+          }));
+        } catch { /* ignore */ }
+
+        // Call the confirm endpoint
+        fetch("/api/payment/fedapay-confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ participantId: participant.id }),
+        })
+          .then((res) => res.json())
+          .then((json) => {
+            if (json.success) {
+              localStorage.removeItem("zd_pending_payment");
+              onPaymentInitiated({
+                id: participant.id,
+                status: "SUCCESS",
+                amount,
+                type: isStep2 ? "FORMATION" : "INSCRIPTION",
+                provider: "FEDAPAY",
+                paymentUrl: null,
+                createdAt: new Date().toISOString(),
+              });
+            } else {
+              toast({
+                title: "Erreur de confirmation",
+                description: json.error || "Le paiement n'a pas pu être confirmé.",
+                variant: "destructive",
+              });
+            }
+          })
+          .catch(() => {
+            toast({
+              title: "Erreur réseau",
+              description: "Le paiement a abouti mais la confirmation a échoué.",
+              variant: "destructive",
+            });
+          });
+      },
     });
 
-    // Redirect to FedaPay hosted checkout
-    window.location.href = fullUrl;
+    // Open the checkout modal
+    if (widget && widget.open) {
+      widget.open();
+    } else if (payBtnRef.current) {
+      // Fallback: use the button selector approach
+      window.FedaPay.init('#fedapay-pay-btn', {
+        public_key: FEDAPAY_PUBLIC_KEY,
+        transaction: {
+          amount: amount,
+          description: isStep2
+            ? `Frais de formation — ${participant.registrationId}`
+            : `Frais d'inscription — ${participant.registrationId}`,
+        },
+        customer: {
+          email: participant.email,
+          firstname: participant.prenoms,
+          lastname: participant.nomComplet,
+        },
+        onComplete: (e: any) => {
+          if (e?.reason === "DIALOG DISMISSED" || e?.reason === "USERCANCELLED") return;
+          // Reload page to trigger confirmation flow
+          window.location.href = `/?payment=success`;
+        },
+      });
+    }
   };
 
   return (
@@ -129,7 +249,7 @@ export function PaymentSection({
               <p className="text-blanc/60 text-sm leading-relaxed max-w-sm mx-auto lg:mx-0">
                 {isStep2
                   ? "Payez les frais de formation pour participer aux 3 jours."
-                  : "Plus qu'une étape : réglez vos frais d'inscription pour confirmer votre place."}
+                  : "Cliquez sur le bouton pour ouvrir la fenêtre de paiement sécurisé."}
               </p>
 
               <div className="inline-flex flex-wrap items-center justify-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#C9A227]/10 border border-[#C9A227]/30">
@@ -152,39 +272,8 @@ export function PaymentSection({
               <p className="text-blanc font-bold text-base">
                 {participant.prenoms} {participant.nomComplet}
               </p>
-              <p className="text-blanc/50 text-xs mt-1 break-all">
-                {participant.email}
-              </p>
-              <p className="text-blanc/50 text-xs mt-0.5">
-                {participant.telWhatsApp}
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.2 }}
-              className="grid grid-cols-2 gap-2 xs:gap-3 mb-4"
-            >
-              {SIDEBAR_ITEMS.map((item) => (
-                <div
-                  key={item.label}
-                  className="bg-[#1A1A1A] border border-[#C9A227]/20 rounded-xl p-3 text-center"
-                >
-                  <div className="mb-1.5">
-                    <item.icon className="w-5 h-5 text-[#C9A227] mx-auto" />
-                  </div>
-                  <p className="text-[#C9A227] text-[9px] xs:text-[10px] font-semibold uppercase tracking-wider mb-0.5">
-                    {item.label}
-                  </p>
-                  <p className="text-blanc text-[11px] xs:text-xs font-bold leading-tight">
-                    {item.value}
-                  </p>
-                  <p className="text-blanc/40 text-[9px] xs:text-[10px] mt-0.5">
-                    {item.sub}
-                  </p>
-                </div>
-              ))}
+              <p className="text-blanc/50 text-xs mt-1 break-all">{participant.email}</p>
+              <p className="text-blanc/50 text-xs mt-0.5">{participant.telWhatsApp}</p>
             </motion.div>
 
             <motion.div
@@ -207,34 +296,12 @@ export function PaymentSection({
                 </p>
                 <p className="text-3xl font-bold gold-text-gradient leading-none">
                   {formatted}
-                  <span className="text-sm font-normal text-blanc/60 ml-1">
-                    FCFA
-                  </span>
+                  <span className="text-sm font-normal text-blanc/60 ml-1">FCFA</span>
                 </p>
               </div>
               <p className="text-blanc/40 text-[10px] mt-2">
                 {isStep2 ? "3 jours de formation" : "Réserve votre place + groupe WhatsApp"}
               </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="flex items-center gap-3 mt-4 text-[10px] text-blanc/40"
-            >
-              <span className="inline-flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#C9A227]" />
-                Chiffré SSL
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5 text-[#C9A227]" />
-                FedaPay
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-[#C9A227]" />
-                Reçu email
-              </span>
             </motion.div>
           </div>
 
@@ -253,9 +320,7 @@ export function PaymentSection({
                 Paiement
               </h3>
               <p className="text-blanc/50 text-xs">
-                {isStep2
-                  ? "Étape 2 : Frais de formation (20 000 FCFA)"
-                  : "Étape 1 : Frais d'inscription (10 FCFA — test)"}
+                {isStep2 ? "Étape 2 : Frais de formation" : "Étape 1 : Frais d'inscription"}
               </p>
             </div>
 
@@ -267,9 +332,7 @@ export function PaymentSection({
                     {isStep2 ? "Étape 2 — Frais de formation" : "Étape 1 — Inscription"}
                   </p>
                   <p className="text-blanc/40 text-[11px] mt-1">
-                    {isStep2
-                      ? "Participation aux 3 jours de formation"
-                      : "Réserve votre place + accès groupe WhatsApp"}
+                    {isStep2 ? "Participation aux 3 jours" : "Réserve votre place + groupe WhatsApp"}
                   </p>
                 </div>
                 <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 border-[#C9A227] bg-[#C9A227]">
@@ -278,28 +341,19 @@ export function PaymentSection({
               </div>
               <p className="text-2xl font-bold text-blanc mt-3">
                 {formatted}
-                <span className="text-xs font-normal text-blanc/50 ml-1">
-                  FCFA
-                </span>
+                <span className="text-xs font-normal text-blanc/50 ml-1">FCFA</span>
               </p>
             </div>
 
-            {isStep2 && (
-              <div className="mb-4 p-3 rounded-lg bg-[#C9A227]/[0.06] border border-[#C9A227]/20 flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#C9A227] flex-shrink-0" strokeWidth={3} />
-                <p className="text-[11px] text-blanc/60">
-                  Inscription payée. Dernière étape pour participer à la formation.
-                </p>
-              </div>
-            )}
-
-            {/* FedaPay CTA */}
+            {/* FedaPay CTA — opens checkout modal */}
             <button
+              ref={payBtnRef}
+              id="fedapay-pay-btn"
               onClick={handlePay}
               className="shine-sweep relative overflow-hidden w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#C9A227] text-noir font-bold text-base hover:bg-[#D4AF37] active:scale-[0.98] transition-all min-h-[52px] shadow-[0_8px_24px_rgba(201,162,39,0.35)]"
             >
               <Lock className="w-4 h-4" />
-              Payer {formatted} FCFA via FedaPay
+              Payer {formatted} FCFA
               <ArrowRight className="w-5 h-5" />
             </button>
 
@@ -342,8 +396,7 @@ export function PaymentSection({
         >
           <p className="text-blanc/40 text-xs">
             © {new Date().getFullYear()}{" "}
-            <span className="text-blanc font-semibold">Zohar Décor</span> — Des
-            souvenirs qui brillent à jamais
+            <span className="text-blanc font-semibold">Zohar Décor</span> — Des souvenirs qui brillent à jamais
           </p>
         </motion.footer>
       </div>

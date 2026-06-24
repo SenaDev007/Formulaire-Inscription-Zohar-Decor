@@ -133,8 +133,8 @@ export default function Home() {
 
   const handlePaymentInitiated = (pay: PaymentSummary) => {
     setPayment(pay);
-    // For FedaPay, the redirect happens in PaymentSection directly
-    // This callback is kept for compatibility but does nothing extra
+    // FedaPay checkout completed — go to confirmation page
+    navigate("confirmation");
   };
 
   const handlePaymentComplete = () => {
