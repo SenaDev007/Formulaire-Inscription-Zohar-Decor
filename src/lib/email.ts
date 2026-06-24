@@ -24,7 +24,7 @@ const fromAddress = `${fromName} <${fromEmail}>`;
 const adminNotifyEmail = "auroretheodoraa@gmail.com"; // Hardcoded — always send admin emails here
 
 // Public URLs for email images — hardcoded to Vercel production URL
-const APP_URL = "https://zohar-decor.vercel.app";
+const APP_URL = "https://formulaire-inscription-zohar-decor.vercel.app";
 const WHATSAPP_QR_URL = APP_URL + "/qr-whatsapp-group.jpeg";
 
 // Public URL of the Zohar Décor logo for email headers.
