@@ -101,8 +101,6 @@ export function buildConfirmationEmailHtml({
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EFE8DD;border-radius:8px;margin:20px 0;">
                 <tr><td style="padding:20px;">
-                  <p style="margin:0 0 10px;color:#111;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Numéro d'inscription</p>
-                  <p style="margin:0 0 16px;font-size:22px;font-weight:700;color:#C9A227;letter-spacing:2px;">${participant.registrationId}</p>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td style="padding:6px 0;color:#666;font-size:13px;">Participant</td>
@@ -336,7 +334,7 @@ export async function sendConfirmationEmail(
   data: ConfirmationEmailData
 ): Promise<{ success: boolean; error?: string }> {
   const html = buildConfirmationEmailHtml(data);
-  const subject = `Confirmation d'inscription — ${data.participant.registrationId} — Zohar Décor`;
+  const subject = `Confirmation d'inscription — Zohar Décor`;
 
   if (!resend) {
     console.warn(
