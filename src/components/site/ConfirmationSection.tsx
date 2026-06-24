@@ -81,10 +81,10 @@ export function ConfirmationSection({
           json.participant?.status === "PAID_INSCRIPTION" ||
           json.participant?.status === "PAID_FULL" ||
           json.participant?.status === "VALIDATED";
-        setStatus(paid ? "paid" : "pending");
-        if (!paid) {
-          setPollCount((c) => c + 1);
-        } else {
+        // Check if payment failed
+        const failed = json.payment?.status === "FAILED";
+        if (paid) {
+          setStatus("paid");
           // Fetch WhatsApp link
           try {
             const waRes = await fetch(
@@ -95,6 +95,12 @@ export function ConfirmationSection({
           } catch {
             /* ignore */
           }
+        } else if (failed) {
+          setStatus("error");
+          if (interval) clearInterval(interval);
+        } else {
+          setStatus("pending");
+          setPollCount((c) => c + 1);
         }
       } catch {
         if (mounted) setStatus("error");
@@ -172,10 +178,12 @@ export function ConfirmationSection({
         >
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
           <h2 className="text-xl font-bold text-blanc mt-4">
-            Inscription introuvable
+            {data?.payment?.status === "FAILED" ? "Paiement échoué" : "Inscription introuvable"}
           </h2>
           <p className="text-sm text-blanc/60 mt-2">
-            Le numéro {registrationId} n'existe pas ou n'a pas pu être retrouvé.
+            {data?.payment?.status === "FAILED"
+              ? "Votre paiement n'a pas abouti. Cela peut être dû à un solde insuffisant ou un numéro non enregistré au Mobile Money. Réessayez avec un autre numéro ou un autre moyen de paiement."
+              : `Le numéro ${registrationId} n'existe pas ou n'a pas pu être retrouvé.`}
           </p>
           <Button
             onClick={onBackHome}
@@ -209,7 +217,7 @@ export function ConfirmationSection({
               <>
                 <strong className="text-blanc">Confirmez le paiement sur votre téléphone.</strong>
                 <br />Une notification Mobile Money a été envoyée au numéro{" "}
-                <strong className="text-blanc">{data.payment?.provider}</strong>.
+                <strong className="text-blanc">{data.participant.telWhatsApp}</strong>.
                 Validez-la pour finaliser.
               </>
             ) : (
