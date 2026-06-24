@@ -43,7 +43,7 @@ export const PAYMENT_OPTIONS = [
   {
     id: "FORMATION",
     label: "Étape 2 — Frais de formation",
-    amount: 100, // TEMPORAIRE: 100 FCFA pour test (normal: 20000)
+    amount: 20000,
     description: "Participation aux 3 jours de formation",
   },
 ] as const;

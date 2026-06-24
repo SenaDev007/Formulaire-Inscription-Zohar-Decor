@@ -2,7 +2,22 @@ import { Resend } from "resend";
 import { Participant, Payment } from "@prisma/client";
 import { db } from "@/lib/db";
 
-const apiKey = process.env.RESEND_API_KEY;
+let _resend: Resend | null = null;
+let _resendChecked = false;
+
+function getResend(): Resend | null {
+  if (_resendChecked) return _resend;
+  _resendChecked = true;
+  const key = process.env.RESEND_API_KEY;
+  if (key) {
+    _resend = new Resend(key);
+    console.log("[email] Resend initialized with API key");
+  } else {
+    console.warn("[email] RESEND_API_KEY not found in environment");
+  }
+  return _resend;
+}
+
 const fromName = process.env.EMAIL_FROM_NAME || "Zohar Décor";
 const fromEmail = process.env.EMAIL_FROM_NOREPLY || "noreply@academiahelm.com";
 const fromAddress = `${fromName} <${fromEmail}>`;
@@ -20,7 +35,6 @@ export const LOGO_URL =
   (process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app") +
   "/logo_zohar_decor.png";
 
-export const resend = apiKey ? new Resend(apiKey) : null;
 
 export const TRAINING_INFO = {
   title: "FORMATION PROFESSIONNELLE EN RÉSINE ÉPOXY",
@@ -32,8 +46,8 @@ export const TRAINING_INFO = {
   location:
     "Zongo 2, von Axe Beni CHC-Presdo, à 100 m du carrefour après EPP La Source, Terre Rouge en allant au CEG Nima.",
   capacity: 10,
-  inscriptionFee: 100, // TEMPORAIRE: 100 FCFA pour test (normal: 5000)
-  trainingFee: 100, // TEMPORAIRE: 100 FCFA pour test (normal: 20000)
+  inscriptionFee: 5000,
+  trainingFee: 20000,
   attestation: "Attestation de participation incluse.",
   contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
@@ -94,9 +108,14 @@ export function buildConfirmationEmailHtml({
           </tr>
           <tr>
             <td style="padding:32px 28px;">
-              <h2 style="margin:0 0 8px;color:#111111;font-size:20px;">Félicitations ${participant.prenoms} !</h2>
+              <h2 style="margin:0 0 8px;color:#111111;font-size:20px;">
+                ${payment?.type === "FORMATION" ? `Confirmation de souscription` : `Félicitations`} ${participant.prenoms} !
+              </h2>
               <p style="margin:0 0 16px;color:#444;font-size:15px;line-height:1.6;">
-                Votre inscription à la <strong>Formation en Résine Époxy</strong> de Zohar Décor a été enregistrée avec succès.
+                ${payment?.type === "FORMATION"
+                  ? `Votre souscription aux <strong>frais de formation</strong> de Zohar Décor a été enregistrée avec succès. Vous êtes maintenant officiellement inscrit(e) à la Formation en Résine Époxy.`
+                  : `Votre inscription à la <strong>Formation en Résine Époxy</strong> de Zohar Décor a été enregistrée avec succès.`
+                }
               </p>
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EFE8DD;border-radius:8px;margin:20px 0;">
@@ -298,7 +317,7 @@ export async function sendRegistrationConfirmationEmail(
   const html = buildRegistrationConfirmationHtml({ participant });
   const subject = `Inscription reçue — ${participant.registrationId} — Zohar Décor`;
 
-  if (!resend) {
+  if (!getResend()) {
     console.warn(
       "[email] RESEND_API_KEY not set — registration email not sent. Recipient:",
       to,
@@ -309,7 +328,7 @@ export async function sendRegistrationConfirmationEmail(
   }
 
   try {
-    const { error } = await resend.emails.send({
+    const { error } = await getResend()!.emails.send({
       from: fromAddress,
       to,
       subject,
@@ -332,9 +351,11 @@ export async function sendConfirmationEmail(
   data: ConfirmationEmailData
 ): Promise<{ success: boolean; error?: string }> {
   const html = buildConfirmationEmailHtml(data);
-  const subject = `Confirmation d'inscription — Zohar Décor`;
+  const subject = payment?.type === "FORMATION"
+    ? `Souscription frais de formation — Zohar Décor`
+    : `Confirmation d'inscription — Zohar Décor`;
 
-  if (!resend) {
+  if (!getResend()) {
     console.warn(
       "[email] RESEND_API_KEY not set — email not sent. Recipient:",
       to,
@@ -345,7 +366,7 @@ export async function sendConfirmationEmail(
   }
 
   try {
-    const { error } = await resend.emails.send({
+    const { error } = await getResend()!.emails.send({
       from: fromAddress,
       to,
       subject,
@@ -371,13 +392,13 @@ export async function sendBulkEmail(
   let sent = 0;
   let failed = 0;
   for (const r of recipients) {
-    if (!resend) {
+    if (!getResend()) {
       console.warn("[email] no Resend — skipping", r.email);
       failed++;
       continue;
     }
     try {
-      const { error } = await resend.emails.send({
+      const { error } = await getResend()!.emails.send({
         from: fromAddress,
         to: r.email,
         subject,
@@ -582,7 +603,7 @@ export async function sendAdminNotification(
     return { sent: false, error: "No admin email configured" };
   }
 
-  if (!resend) {
+  if (!getResend()) {
     console.warn("[email] RESEND_API_KEY not set — admin notification not sent to:", targetEmail);
     return { sent: false, error: "RESEND_API_KEY not configured" };
   }
@@ -591,7 +612,7 @@ export async function sendAdminNotification(
   const subject = isPaymentSubject(type, participant);
 
   try {
-    const { error } = await resend.emails.send({
+    const { error } = await getResend()!.emails.send({
       from: fromAddress,
       to: targetEmail,
       subject,
