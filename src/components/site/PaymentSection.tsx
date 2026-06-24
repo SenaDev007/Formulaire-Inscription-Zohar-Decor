@@ -415,19 +415,20 @@ export function PaymentSection({
               <div className="mb-6">
                 <Label
                   htmlFor="providerPhone"
-                  className="text-[10px] uppercase tracking-[0.08em] font-semibold text-blanc/60"
+                  className="text-[10px] uppercase tracking-[0.08em] font-semibold text-[#C9A227]"
                 >
-                  Numéro {PROVIDER_COMPONENTS[provider].label}
+                  Numéro {PROVIDER_COMPONENTS[provider].label} pour le paiement
                 </Label>
                 <input
                   id="providerPhone"
+                  type="tel"
                   value={providerPhone}
                   onChange={(e) => setProviderPhone(e.target.value)}
-                  placeholder="Ex. 97 00 00 00"
-                  className="w-full px-4 py-3.5 rounded-xl bg-noir text-blanc text-base sm:text-sm placeholder:text-blanc/30 border border-blanc/[0.08] focus:border-[#C9A227]/60 focus:ring-1 focus:ring-[#C9A227]/20 focus:outline-none transition-all"
+                  placeholder="Ex: 2290162597692"
+                  className="w-full px-4 py-3.5 rounded-xl bg-noir text-blanc text-base sm:text-sm placeholder:text-blanc/30 border border-blanc/[0.08] focus:border-[#C9A227]/60 focus:ring-1 focus:ring-[#C9A227]/20 focus:outline-none transition-all mt-2"
                 />
-                <p className="text-[11px] text-blanc/40 mt-1.5">
-                  Le paiement sera demandé sur ce numéro via Mobile Money.
+                <p className="text-[11px] text-[#C9A227]/70 mt-1.5 font-medium">
+                  ⚠️ Entrez le numéro Mobile Money qui recevra la notification de paiement (peut être différent de votre numéro WhatsApp).
                 </p>
               </div>
             )}
