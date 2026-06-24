@@ -60,16 +60,17 @@ export function FormationSection({
   }, []);
 
   // Filter participants by search query
+  // Split the query into words and check if ALL words are found in the
+  // combined "prenoms + nomComplet + email + telWhatsApp" string
   const filtered = searchQuery.trim()
-    ? allParticipants.filter((p) => {
-        const q = searchQuery.toLowerCase();
-        return (
-          p.nomComplet.toLowerCase().includes(q) ||
-          p.prenoms.toLowerCase().includes(q) ||
-          p.email.toLowerCase().includes(q) ||
-          p.telWhatsApp.includes(searchQuery)
-        );
-      })
+    ? (() => {
+        const words = searchQuery.toLowerCase().trim().split(/\s+/);
+        return allParticipants.filter((p) => {
+          const haystack = `${p.prenoms} ${p.nomComplet} ${p.email} ${p.telWhatsApp}`.toLowerCase();
+          // Every word must be found somewhere in the haystack
+          return words.every((word) => haystack.includes(word));
+        });
+      })()
     : allParticipants;
 
   // Pay formation via FedaPay
