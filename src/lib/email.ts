@@ -46,8 +46,8 @@ export const TRAINING_INFO = {
   location:
     "Zongo 2, von Axe Beni CHC-Presdo, à 100 m du carrefour après EPP La Source, Terre Rouge en allant au CEG Nima.",
   capacity: 10,
-  inscriptionFee: 5000,
-  trainingFee: 20000,
+  inscriptionFee: 100, // TEST: 100 FCFA (normal: 5000)
+  trainingFee: 100, // TEST: 100 FCFA (normal: 20000)
   attestation: "Attestation de participation incluse.",
   contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
