@@ -148,17 +148,24 @@ export async function POST(req: NextRequest) {
     });
 
     if (init.status !== "SUCCESS") {
-      // Mark payment as failed and return error
+      // Mark payment as failed
       await db.payment.update({
         where: { id: payment.id },
         data: { status: "FAILED" },
       });
+
+      // Return a clear, user-friendly error message
+      let userError = init.message || "Le paiement n'a pas pu être initié. Vérifiez votre numéro Mobile Money et réessayez.";
+      if (userError.includes("Not Registered") || userError.includes("LOW_BALANCE")) {
+        userError = "Ce numéro n'est pas enregistré au Mobile Money ou le solde est insuffisant. Vérifiez votre numéro et réessayez.";
+      }
+
       return NextResponse.json(
         {
           success: false,
-          error: init.message || "Échec d.initialisation du paiement FeexPay",
+          error: userError,
         },
-        { status: 502 }
+        { status: 200 }
       );
     }
 
