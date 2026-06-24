@@ -3,19 +3,18 @@ import { Participant, Payment } from "@prisma/client";
 import { db } from "@/lib/db";
 
 let _resend: Resend | null = null;
-let _resendChecked = false;
 
 function getResend(): Resend | null {
-  if (_resendChecked) return _resend;
-  _resendChecked = true;
   const key = process.env.RESEND_API_KEY;
   if (key && key.length > 5) {
-    _resend = new Resend(key);
-    console.log("[email] Resend initialized. Key prefix:", key.substring(0, 6) + "...");
-  } else {
-    console.warn("[email] RESEND_API_KEY not found or too short. Value:", key ? `"${key.substring(0, 3)}..."` : "(empty)");
+    if (!_resend) {
+      _resend = new Resend(key);
+      console.log("[email] Resend initialized. Key prefix:", key.substring(0, 6) + "...");
+    }
+    return _resend;
   }
-  return _resend;
+  console.warn("[email] RESEND_API_KEY not found or too short.");
+  return null;
 }
 
 const fromName = process.env.EMAIL_FROM_NAME || "Zohar Décor";
