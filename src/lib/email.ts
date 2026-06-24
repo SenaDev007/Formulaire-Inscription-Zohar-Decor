@@ -593,7 +593,7 @@ export function buildAdminNotificationHtml(
                 <p style="margin:0 0 10px;font-size:12px;color:#FFFFFF;opacity:0.9;">
                   Cliquez pour envoyer une confirmation de réception au participant
                 </p>
-                <a href="https://wa.me/${participant.telWhatsApp.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
+                <a href="https://wa.me/229${participant.telWhatsApp.replace(/[^\d]/g, "").replace(/^229/, "").replace(/^0/, "")}?text=${encodeURIComponent(
                   `Bonjour ${participant.prenoms},\n\n✅ Nous confirmons la réception de votre paiement des ${payment?.type === "FORMATION" ? "frais de formation" : "frais d'inscription"}.\n\nVotre place est désormais réservée pour la Formation en Résine Époxy de Zohar Décor.\n\n📅 Dates : ${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year}\n📍 Lieu : ${TRAINING_INFO.location}\n\n👥 Rejoignez le groupe WhatsApp des participants :\n${TRAINING_INFO.whatsappGroupLink}\n\nÀ très bientôt.\n\nZohar Décor\n${TRAINING_INFO.slogan}`
                 )}" target="_blank" rel="noopener noreferrer"
                    style="display:inline-block;background:#FFFFFF;color:#25D366;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;">
