@@ -47,9 +47,7 @@ export const TRAINING_INFO = {
   contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "2290162597692",
-  whatsappGroupLink:
-    process.env.WHATSAPP_GROUP_LINK ||
-    "https://chat.whatsapp.com/VOTRE-LIEN-GROUPE",
+  whatsappGroupLink: "https://chat.whatsapp.com/JNMZnOxxjiXHHzyCM2CkRG",
   slogan: "Des souvenirs qui brillent à jamais",
 };
 
@@ -176,6 +174,19 @@ export function buildConfirmationEmailHtml({
                 <p style="margin:10px 0 0;font-size:11px;opacity:0.85;">
                   ou cliquez sur le bouton ci-dessus si vous êtes sur mobile
                 </p>
+              </div>
+
+              <!-- Bouton: Confirmer mon paiement à Zohar Décor via WhatsApp -->
+              <div style="margin:20px 0;padding:16px;background:#EFE8DD;border-radius:8px;text-align:center;">
+                <p style="margin:0 0 10px;font-size:13px;color:#444;font-weight:600;">
+                  Notifiez Zohar Décor de votre paiement par WhatsApp
+                </p>
+                <a href="https://wa.me/${TRAINING_INFO.whatsappNumber}?text=${encodeURIComponent(
+                  `Bonjour Zohar Decor,\n\nC'est ${participant.prenoms} ${participant.nomComplet}.\n\nJe viens de payer mes ${payment?.type === "FORMATION" ? "frais de formation" : "frais d'inscription"} via FedaPay.\n\nMerci de confirmer la reception et de reserver ma place.\n\nCordialement,\n${participant.prenoms}`
+                )}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background:#25D366;color:#FFFFFF;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;">
+                  Confirmer mon paiement à Zohar Décor
+                </a>
               </div>
 
               <div style="margin:28px 0;padding:20px;background:#111111;border-radius:8px;color:#F8F6F2;">
@@ -429,20 +440,32 @@ export function buildAdminNotificationHtml(
   payment?: Payment | null
 ): string {
   const isPayment = type === "PAYMENT_CONFIRMED";
+  const isFormation = payment?.type === "FORMATION";
   const amount = payment?.amount ?? TRAINING_INFO.inscriptionFee;
   const formattedAmount = new Intl.NumberFormat("fr-FR").format(amount);
-  const paymentTypeLabel =
-    payment?.type === "FORMATION"
-      ? "Frais de formation (20 000 FCFA)"
-      : payment?.type === "INSCRIPTION"
-      ? "Inscription (5 000 FCFA)"
-      : "—";
+  const paymentTypeLabel = isFormation
+    ? "Frais de formation (20 000 FCFA)"
+    : "Frais d'inscription (5 000 FCFA)";
 
-  const headerColor = isPayment ? "#065F46" : "#C9A227";
-  const headerBg = isPayment ? "#D1FAE5" : "#FEF3C7";
+  const headerColor = isPayment
+    ? (isFormation ? "#1E40AF" : "#065F46")
+    : "#C9A227";
+  const headerBg = isPayment
+    ? (isFormation ? "#DBEAFE" : "#D1FAE5")
+    : "#FEF3C7";
+
   const title = isPayment
-    ? "💰 Paiement confirmé"
-    : "📋 Nouvelle inscription";
+    ? (isFormation ? "Frais de formation payes" : "Frais d'inscription payes")
+    : "Nouvelle inscription";
+
+  // Human-readable status
+  const statusLabel = participant.status === "PAID_FULL"
+    ? "Paiement effectue — Formation complete"
+    : participant.status === "PAID_INSCRIPTION"
+    ? "Paiement effectue — Inscription confirmee"
+    : participant.status === "UNPAID"
+    ? "En attente de paiement"
+    : participant.status;
 
   return `
 <!DOCTYPE html>
@@ -519,7 +542,7 @@ export function buildAdminNotificationHtml(
                 </tr>
                 <tr>
                   <td style="padding:8px 0;color:#666;font-size:13px;">Statut</td>
-                  <td style="padding:8px 0;color:${headerColor};font-size:13px;font-weight:700;">${participant.status}</td>
+                  <td style="padding:8px 0;color:${headerColor};font-size:13px;font-weight:700;">${statusLabel}</td>
                 </tr>
                 ${
                   isPayment && payment
@@ -561,6 +584,21 @@ export function buildAdminNotificationHtml(
                 <p style="margin:4px 0 0;font-size:11px;color:#FFFFFF;opacity:0.85;">
                   Partagé avec le participant dans son email de confirmation
                 </p>
+              </div>
+
+              <div style="margin-top:14px;padding:16px;background:#25D366;border-radius:8px;text-align:center;">
+                <p style="margin:0 0 6px;font-size:12px;color:#FFFFFF;text-transform:uppercase;letter-spacing:1px;font-weight:600;">
+                  Confirmer au participant via WhatsApp
+                </p>
+                <p style="margin:0 0 10px;font-size:12px;color:#FFFFFF;opacity:0.9;">
+                  Cliquez pour envoyer une confirmation de réception au participant
+                </p>
+                <a href="https://wa.me/${participant.telWhatsApp.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
+                  `Bonjour ${participant.prenoms},\n\n✅ Nous confirmons la réception de votre paiement des ${payment?.type === "FORMATION" ? "frais de formation" : "frais d'inscription"}.\n\nVotre place est désormais réservée pour la Formation en Résine Époxy de Zohar Décor.\n\n📅 Dates : ${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year}\n📍 Lieu : ${TRAINING_INFO.location}\n\n👥 Rejoignez le groupe WhatsApp des participants :\n${TRAINING_INFO.whatsappGroupLink}\n\nÀ très bientôt.\n\nZohar Décor\n${TRAINING_INFO.slogan}`
+                )}" target="_blank" rel="noopener noreferrer"
+                   style="display:inline-block;background:#FFFFFF;color:#25D366;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;">
+                  Confirmer au participant
+                </a>
               </div>
 
               <div style="margin-top:14px;padding:14px;background:#111111;border-radius:8px;text-align:center;">
@@ -635,7 +673,10 @@ function isPaymentSubject(
   participant: Participant
 ): string {
   if (type === "PAYMENT_CONFIRMED") {
-    return `💰 Paiement confirmé — ${participant.registrationId} — ${participant.nomComplet}`;
+    const isForm = participant.paymentType === "FORMATION";
+    return isForm
+      ? `Frais de formation payes — ${participant.nomComplet} ${participant.prenoms}`
+      : `Frais d'inscription payes — ${participant.nomComplet} ${participant.prenoms}`;
   }
-  return `📋 Nouvelle inscription — ${participant.registrationId} — ${participant.nomComplet}`;
+  return `Nouvelle inscription — ${participant.nomComplet} ${participant.prenoms}`;
 }
