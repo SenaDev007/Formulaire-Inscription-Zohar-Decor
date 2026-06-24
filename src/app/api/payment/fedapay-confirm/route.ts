@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       participant.status === "PAID_INSCRIPTION" ? "FORMATION" : "INSCRIPTION";
     const amount =
       paymentType === "FORMATION"
-        ? 20000
+        ? 100 // TEMPORAIRE: 100 FCFA pour test (normal: 20000)
         : 100; // TEMPORAIRE: 100 FCFA pour test (normal: 5000)
 
     // Create or update a payment record
