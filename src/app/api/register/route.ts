@@ -58,25 +58,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await db.participant.findFirst({
-      where: {
-        OR: [
-          { email: parsed.data.email },
-          { telWhatsApp: parsed.data.telWhatsApp },
-        ],
-      },
-    });
-    if (existing) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Un inscrit avec cet email ou ce téléphone WhatsApp existe déjà. Contactez-nous si vous pensez à une erreur.",
-        },
-        { status: 409 }
-      );
-    }
-
     const registrationId = await nextRegistrationId();
 
     const participant = await db.participant.create({
