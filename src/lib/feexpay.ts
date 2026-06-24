@@ -187,17 +187,24 @@ export async function initFeexPayPayment(
   }
 
   // === Mobile Money payment (V2: POST /api/transactions/requesttopay/integration) ===
+  // SDK sends token in BOTH the Authorization header AND the body
   const body = {
     phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
+    country: payload.country || "Bénin",
+    phoneNumberRight: payload.phoneNumber.replace(/\D/g, "").replace(/^229/, ""),
     amount: payload.amount,
     reseau: payload.provider,
     shop: SHOP_ID,
+    token: API_TOKEN,
     first_name: payload.fullName,
     email: payload.email,
-    country: payload.country || "Bénin",
+    custom_id: payload.reference,
+    otp: "",
     callback_info: payload.callbackUrl,
     description: `Inscription Zohar Décor — ${payload.reference}`,
     currency: payload.currency || "XOF",
+    merchant_domain: process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app",
+    merchant_ip: "",
     payment_interface: "API",
   };
 
