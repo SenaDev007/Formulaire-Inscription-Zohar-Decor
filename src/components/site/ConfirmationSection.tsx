@@ -190,6 +190,7 @@ export function ConfirmationSection({
 
   // === Pending state ===
   if (status === "pending" && data) {
+    const isMoMo = data.payment?.provider && data.payment.provider !== "CARD";
     return (
       <section className="min-h-screen bg-noir flex items-center justify-center px-4 py-12">
         <motion.div
@@ -204,9 +205,17 @@ export function ConfirmationSection({
             Paiement en cours...
           </h1>
           <p className="text-sm text-blanc/60 mt-2">
-            Nous vérifions votre paiement. Cette page s'actualise
-            automatiquement.
-            {pollCount > 2 && " Cela peut prendre quelques instants."}
+            {isMoMo ? (
+              <>
+                <strong className="text-blanc">Confirmez le paiement sur votre téléphone.</strong>
+                <br />Une notification Mobile Money a été envoyée au numéro{" "}
+                <strong className="text-blanc">{data.payment?.provider}</strong>.
+                Validez-la pour finaliser.
+              </>
+            ) : (
+              "Nous vérifions votre paiement. Cette page s'actualise automatiquement."
+            )}
+            {pollCount > 3 && " Cela peut prendre quelques instants."}
           </p>
 
           <div className="mt-6 bg-[#0A0A0A] rounded-xl p-4 text-left border border-[#C9A227]/20">

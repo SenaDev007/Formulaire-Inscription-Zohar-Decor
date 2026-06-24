@@ -240,7 +240,7 @@ export async function initFeexPayPayment(
 
 /**
  * Check the status of a FeexPay transaction by its reference.
- * V2 endpoint: GET /api/transactions/{reference}
+ * V2 endpoint: GET /api/transactions/public/single/status/{reference}
  */
 export async function checkFeexPayStatus(
   reference: string
@@ -250,7 +250,7 @@ export async function checkFeexPayStatus(
   }
   try {
     const res = await fetch(
-      `${BASE_URL}/api/transactions/${encodeURIComponent(reference)}`,
+      `${BASE_URL}/api/transactions/public/single/status/${encodeURIComponent(reference)}`,
       {
         method: "GET",
         headers: {
