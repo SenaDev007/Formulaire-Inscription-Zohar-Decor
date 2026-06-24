@@ -38,7 +38,7 @@ declare global {
   }
 }
 
-const FEDAPAY_PUBLIC_KEY = process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY || "";
+const FEDAPAY_PUBLIC_KEY = process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY || "pk_live_Vh_R_snTE4OKn9RyrN9Iy3rP";
 
 const SIDEBAR_ITEMS = [
   {
