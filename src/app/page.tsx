@@ -54,6 +54,42 @@ export default function Home() {
 
   // Read view from URL hash on mount + hash changes
   useEffect(() => {
+    // Check for FedaPay payment success redirect
+    const params = new URLSearchParams(window.location.search);
+    const isPaymentSuccess =
+      params.get("payment") === "success" || params.get("status") === "approved";
+
+    if (isPaymentSuccess) {
+      // FedaPay payment successful — confirm via API
+      const participantId = params.get("participantId");
+      if (participantId) {
+        // Call the payment confirm endpoint
+        fetch("/api/payment/fedapay-confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ participantId }),
+        }).then((res) => res.json()).then((json) => {
+          // Clean URL
+          window.history.replaceState({}, "", "/");
+          // Show confirmation with the real registration ID
+          if (json.success && json.registrationId) {
+            setRegistrationId(json.registrationId);
+            setView("confirmation");
+          } else {
+            setView("home");
+          }
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }).catch(() => {
+          window.history.replaceState({}, "", "/");
+          setView("home");
+        });
+      } else {
+        // No participantId — just go home
+        window.history.replaceState({}, "", "/");
+      }
+      return;
+    }
+
     const apply = () => {
       const h = window.location.hash.replace("#", "");
       if (h === "admin") setView("admin");
@@ -87,20 +123,8 @@ export default function Home() {
 
   const handlePaymentInitiated = (pay: PaymentSummary) => {
     setPayment(pay);
-    if (pay.paymentUrl) {
-      // Card payment (or demo mode): redirect to the payment URL
-      // - For CARD: FeeXPay returns a hosted page URL
-      // - For DEMO: it's our internal /api/payment/demo-confirm endpoint
-      // - For MoMo in production: FeeXPay does NOT return a URL — the user
-      //   receives a USSD push on their phone, and we poll the status.
-      //   In that case, paymentUrl is null and we navigate to confirmation
-      //   which will poll until the payment is confirmed.
-      window.location.href = pay.paymentUrl;
-    } else {
-      // Mobile Money (MTN, Moov, Celtiis) — no redirect, the user receives
-      // a push on their phone. Navigate to confirmation page which polls.
-      navigate("confirmation");
-    }
+    // For FedaPay, the redirect happens in PaymentSection directly
+    // This callback is kept for compatibility but does nothing extra
   };
 
   const handlePaymentComplete = () => {

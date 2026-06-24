@@ -1,25 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Loader2,
   Check,
   ShieldCheck,
   Lock,
   ArrowRight,
-  Smartphone,
-  CreditCard,
   CalendarDays,
   Users,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PAYMENT_PROVIDERS, PAYMENT_OPTIONS } from "@/lib/constants";
 import { TRAINING_INFO } from "@/lib/email";
 import {
   MTNMoMoLogo,
@@ -27,23 +20,8 @@ import {
   CeltiisCashLogo,
   VisaLogo,
   MastercardLogo,
-  FeeXPayLogo,
-  WhatsAppIcon,
 } from "@/components/brand/PaymentLogos";
-import type { ParticipantSummary, PaymentSummary } from "@/app/page";
-
-type Provider = "MTN_MOMO" | "MOOV_MONEY" | "CELTIIS_CASH" | "CARD";
-type PaymentType = "INSCRIPTION" | "FORMATION";
-
-const PROVIDER_COMPONENTS: Record<
-  Provider,
-  { Logo: React.FC<{ size?: number; className?: string }>; label: string; sub: string }
-> = {
-  MTN_MOMO: { Logo: MTNMoMoLogo, label: "MTN MoMo", sub: "Mobile Money" },
-  MOOV_MONEY: { Logo: MoovMoneyLogo, label: "Moov Money", sub: "Mobile Money" },
-  CELTIIS_CASH: { Logo: CeltiisCashLogo, label: "Celtiis Cash", sub: "Mobile Money" },
-  CARD: { Logo: VisaLogo, label: "Carte bancaire", sub: "Visa / Mastercard" },
-};
+import type { ParticipantSummary } from "@/app/page";
 
 const SIDEBAR_ITEMS = [
   {
@@ -55,8 +33,8 @@ const SIDEBAR_ITEMS = [
   {
     icon: Users,
     label: "Places",
-    value: "10 max",
-    sub: "par cohorte",
+    value: "Limitées",
+    sub: "Inscrivez-vous vite",
   },
 ];
 
@@ -66,96 +44,49 @@ export function PaymentSection({
   onBack,
 }: {
   participant: ParticipantSummary;
-  onPaymentInitiated: (p: PaymentSummary) => void;
+  onPaymentInitiated: (p: any) => void;
   onBack: () => void;
 }) {
-  // Auto-determine payment step based on participant status:
-  // - UNPAID → Step 1: INSCRIPTION (5 000 FCFA)
-  // - PAID_INSCRIPTION → Step 2: FORMATION (20 000 FCFA)
-  const [paymentType, setPaymentType] = useState<PaymentType>(
-    participant.status === "PAID_INSCRIPTION" ? "FORMATION" : "INSCRIPTION"
-  );
-  const [provider, setProvider] = useState<Provider>("MTN_MOMO");
-  const [providerPhone, setProviderPhone] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const amount =
-    paymentType === "FORMATION"
-      ? TRAINING_INFO.trainingFee
-      : TRAINING_INFO.inscriptionFee;
+  // Auto-determine payment step based on participant status
+  const isStep2 = participant.status === "PAID_INSCRIPTION";
+  const amount = isStep2 ? TRAINING_INFO.trainingFee : TRAINING_INFO.inscriptionFee;
   const formatted = new Intl.NumberFormat("fr-FR").format(amount);
 
-  const handleSubmit = async () => {
-    if (provider !== "CARD" && !providerPhone.trim()) {
+  const handlePay = () => {
+    const checkoutUrl = process.env.NEXT_PUBLIC_FEDAPAY_CHECKOUT_URL || "";
+    if (!checkoutUrl) {
       toast({
-        title: "Numéro requis",
-        description: "Renseignez le numéro Mobile Money qui paiera.",
+        title: "Paiement indisponible",
+        description: "Le lien de paiement n'est pas encore configuré. Contactez-nous.",
         variant: "destructive",
       });
       return;
     }
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/payment/init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          participantId: participant.id,
-          paymentType,
-          provider,
-          providerPhone: providerPhone || null,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        toast({
-          title: "Erreur de paiement",
-          description: json.error || "Réessayez.",
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({
-        title: json.demoMode ? "Mode démo" : "Paiement initié",
-        description: json.demoMode
-          ? "Mode démo — vous allez être redirigé pour confirmer."
-          : provider === "CARD"
-          ? "Vous allez être redirigé vers FeexPay."
-          : "Confirmez le paiement sur votre téléphone.",
-      });
-      onPaymentInitiated({
-        id: json.payment.id,
-        status: json.payment.status,
-        amount: json.payment.amount,
-        type: json.payment.type,
-        provider: json.payment.provider,
-        feexpayTransaction: json.payment.feexpayReference,
-        paymentUrl: json.payment.paymentUrl,
-        createdAt: new Date().toISOString(),
-      });
-    } catch (e) {
-      console.error(e);
-      toast({
-        title: "Erreur réseau",
-        description: "Réessayez.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+
+    // Build return URL — FedaPay will redirect here after payment
+    const returnUrl = `${window.location.origin}/?payment=success&participantId=${participant.id}`;
+    const separator = checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = `${checkoutUrl}${separator}redirect_url=${encodeURIComponent(returnUrl)}`;
+
+    toast({
+      title: "Redirection vers FedaPay",
+      description: "Vous allez être redirigé vers la page de paiement sécurisée.",
+    });
+
+    // Redirect to FedaPay hosted checkout
+    window.location.href = fullUrl;
   };
 
   return (
     <section className="min-h-screen bg-noir text-blanc relative overflow-hidden">
-      {/* Decorative gold blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 -right-32 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-[#C9A227]/5 blur-3xl" />
         <div className="absolute -bottom-32 -left-32 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-[#E8C766]/5 blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10 lg:py-14">
-        {/* Back button */}
         <button
           onClick={onBack}
           className="inline-flex items-center gap-2 text-sm text-blanc/60 hover:text-blanc transition-colors mb-6"
@@ -165,7 +96,7 @@ export function PaymentSection({
         </button>
 
         <div className="lg:grid lg:grid-cols-[1fr_520px] xl:grid-cols-[1fr_560px] lg:gap-10 xl:gap-14 lg:items-start">
-          {/* ============ LEFT PANEL (sticky summary) ============ */}
+          {/* LEFT PANEL */}
           <div className="lg:sticky lg:top-8 mb-8 lg:mb-0">
             <motion.header
               initial={{ opacity: 0, y: -16 }}
@@ -182,10 +113,7 @@ export function PaymentSection({
                   />
                 </div>
                 <div>
-                  <h1
-                    className="text-2xl xs:text-3xl sm:text-4xl font-extrabold tracking-tight leading-none"
-                    style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
-                  >
+                  <h1 className="text-2xl xs:text-3xl sm:text-4xl font-extrabold tracking-tight leading-none">
                     <span className="text-blanc">ZOHAR</span>
                     <span className="gold-text-gradient"> DÉCOR</span>
                   </h1>
@@ -195,18 +123,15 @@ export function PaymentSection({
                 </div>
               </div>
 
-              <h2
-                className="text-lg xs:text-xl sm:text-2xl font-bold text-blanc mt-5 mb-2 leading-snug"
-                style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
-              >
-                Finalisez votre inscription
+              <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-blanc mt-5 mb-2 leading-snug">
+                {isStep2 ? "Frais de formation" : "Finalisez votre inscription"}
               </h2>
               <p className="text-blanc/60 text-sm leading-relaxed max-w-sm mx-auto lg:mx-0">
-                Plus qu'une étape : réglez vos frais pour confirmer
-                définitivement votre place à la formation.
+                {isStep2
+                  ? "Payez les frais de formation pour participer aux 3 jours."
+                  : "Plus qu'une étape : réglez vos frais d'inscription pour confirmer votre place."}
               </p>
 
-              {/* Registration ID badge */}
               <div className="inline-flex flex-wrap items-center justify-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#C9A227]/10 border border-[#C9A227]/30">
                 <Check className="w-3.5 h-3.5 text-[#C9A227]" strokeWidth={3} />
                 <span className="text-[#C9A227] text-[11px] xs:text-xs font-semibold">
@@ -215,7 +140,6 @@ export function PaymentSection({
               </div>
             </motion.header>
 
-            {/* Participant card */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -236,7 +160,6 @@ export function PaymentSection({
               </p>
             </motion.div>
 
-            {/* Info items */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -249,10 +172,7 @@ export function PaymentSection({
                   className="bg-[#1A1A1A] border border-[#C9A227]/20 rounded-xl p-3 text-center"
                 >
                   <div className="mb-1.5">
-                    <item.icon
-                      className="w-5 h-5 text-[#C9A227] mx-auto"
-                      aria-hidden="true"
-                    />
+                    <item.icon className="w-5 h-5 text-[#C9A227] mx-auto" />
                   </div>
                   <p className="text-[#C9A227] text-[9px] xs:text-[10px] font-semibold uppercase tracking-wider mb-0.5">
                     {item.label}
@@ -267,22 +187,21 @@ export function PaymentSection({
               ))}
             </motion.div>
 
-            {/* Total summary */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.3 }}
               className="bg-gradient-to-br from-[#C9A227]/15 to-[#1A1A1A] border border-[#C9A227]/40 rounded-xl p-4"
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-end justify-between">
                 <p className="text-blanc/60 text-[10px] uppercase tracking-wider">
-                  Formule choisie
+                  {isStep2 ? "Frais de formation" : "Frais d'inscription"}
                 </p>
                 <p className="text-[#C9A227] text-xs font-bold">
-                  {paymentType === "FORMATION" ? "Formation" : "Inscription"}
+                  {isStep2 ? "Étape 2" : "Étape 1"}
                 </p>
               </div>
-              <div className="flex items-end justify-between">
+              <div className="flex items-end justify-between mt-1">
                 <p className="text-blanc/60 text-[10px] uppercase tracking-wider">
                   Total à payer
                 </p>
@@ -294,11 +213,10 @@ export function PaymentSection({
                 </p>
               </div>
               <p className="text-blanc/40 text-[10px] mt-2">
-                {paymentType === "FORMATION" ? "3 jours de formation" : "Réserve votre place + groupe WhatsApp"}
+                {isStep2 ? "3 jours de formation" : "Réserve votre place + groupe WhatsApp"}
               </p>
             </motion.div>
 
-            {/* Trust badges */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -311,7 +229,7 @@ export function PaymentSection({
               </span>
               <span className="inline-flex items-center gap-1">
                 <Lock className="w-3.5 h-3.5 text-[#C9A227]" />
-                FeexPay
+                FedaPay
               </span>
               <span className="inline-flex items-center gap-1">
                 <Check className="w-3.5 h-3.5 text-[#C9A227]" />
@@ -320,7 +238,7 @@ export function PaymentSection({
             </motion.div>
           </div>
 
-          {/* ============ RIGHT PANEL (payment form) ============ */}
+          {/* RIGHT PANEL */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -335,23 +253,21 @@ export function PaymentSection({
                 Paiement
               </h3>
               <p className="text-blanc/50 text-xs">
-                {paymentType === "FORMATION"
+                {isStep2
                   ? "Étape 2 : Frais de formation (20 000 FCFA)"
-                  : "Étape 1 : Frais d'inscription (5 000 FCFA)"}
+                  : "Étape 1 : Frais d'inscription (10 FCFA — test)"}
               </p>
             </div>
 
-            {/* Current step card (read-only, determined by participant status) */}
+            {/* Amount card */}
             <div className="rounded-xl p-4 border-2 border-[#C9A227] bg-[#C9A227]/[0.08] mb-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-blanc text-sm">
-                    {paymentType === "FORMATION"
-                      ? "Étape 2 — Frais de formation"
-                      : "Étape 1 — Inscription"}
+                    {isStep2 ? "Étape 2 — Frais de formation" : "Étape 1 — Inscription"}
                   </p>
                   <p className="text-blanc/40 text-[11px] mt-1">
-                    {paymentType === "FORMATION"
+                    {isStep2
                       ? "Participation aux 3 jours de formation"
                       : "Réserve votre place + accès groupe WhatsApp"}
                   </p>
@@ -368,110 +284,31 @@ export function PaymentSection({
               </p>
             </div>
 
-            {paymentType === "FORMATION" && (
+            {isStep2 && (
               <div className="mb-4 p-3 rounded-lg bg-[#C9A227]/[0.06] border border-[#C9A227]/20 flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#C9A227] flex-shrink-0" strokeWidth={3} />
                 <p className="text-[11px] text-blanc/60">
-                  Inscription (5 000 FCFA) payée. Dernière étape pour participer à la formation.
+                  Inscription payée. Dernière étape pour participer à la formation.
                 </p>
               </div>
             )}
 
-            {/* Provider selection */}
-            <Label className="text-[10px] uppercase tracking-[0.08em] font-semibold text-blanc/60 mb-3 block">
-              Moyen de paiement
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              {PAYMENT_PROVIDERS.map((p) => {
-                const cfg = PROVIDER_COMPONENTS[p.id as Provider];
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setProvider(p.id as Provider)}
-                    className={`flex flex-col items-center gap-2 rounded-xl p-3 border-2 transition-all ${
-                      provider === p.id
-                        ? "border-[#C9A227] bg-[#C9A227]/[0.08]"
-                        : "border-blanc/[0.08] hover:border-[#C9A227]/40"
-                    }`}
-                  >
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-blanc p-1">
-                      <cfg.Logo size={p.id === "CARD" ? 44 : 36} />
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold text-blanc text-[11px] leading-tight">
-                        {cfg.label}
-                      </p>
-                      <p className="text-[9px] text-blanc/40 leading-tight mt-0.5">
-                        {cfg.sub}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Provider phone (MoMo only) */}
-            {provider !== "CARD" && (
-              <div className="mb-6">
-                <Label
-                  htmlFor="providerPhone"
-                  className="text-[10px] uppercase tracking-[0.08em] font-semibold text-[#C9A227]"
-                >
-                  Numéro {PROVIDER_COMPONENTS[provider].label} pour le paiement
-                </Label>
-                <input
-                  id="providerPhone"
-                  type="tel"
-                  value={providerPhone}
-                  onChange={(e) => setProviderPhone(e.target.value)}
-                  placeholder="Ex: 2290162597692"
-                  className="w-full px-4 py-3.5 rounded-xl bg-noir text-blanc text-base sm:text-sm placeholder:text-blanc/30 border border-blanc/[0.08] focus:border-[#C9A227]/60 focus:ring-1 focus:ring-[#C9A227]/20 focus:outline-none transition-all mt-2"
-                />
-                <p className="text-[11px] text-[#C9A227]/70 mt-1.5 font-medium">
-                  ⚠️ Entrez le numéro Mobile Money qui recevra la notification de paiement (peut être différent de votre numéro WhatsApp).
-                </p>
-              </div>
-            )}
-
-            {/* Card info box */}
-            {provider === "CARD" && (
-              <div className="mb-6 p-4 rounded-xl bg-[#C9A227]/[0.06] border border-[#C9A227]/20 flex items-start gap-3">
-                <CreditCard className="w-5 h-5 text-[#C9A227] flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] text-blanc/60 leading-relaxed">
-                  Vous serez redirigé vers la page sécurisée FeexPay pour saisir
-                  vos informations de carte (Visa ou Mastercard).
-                </p>
-              </div>
-            )}
-
-            {/* CTA — single unified payment button */}
+            {/* FedaPay CTA */}
             <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="shine-sweep relative overflow-hidden w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#C9A227] text-noir font-bold text-base hover:bg-[#D4AF37] active:scale-[0.98] transition-all min-h-[52px] shadow-[0_8px_24px_rgba(201,162,39,0.35)] disabled:opacity-60"
+              onClick={handlePay}
+              className="shine-sweep relative overflow-hidden w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#C9A227] text-noir font-bold text-base hover:bg-[#D4AF37] active:scale-[0.98] transition-all min-h-[52px] shadow-[0_8px_24px_rgba(201,162,39,0.35)]"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Initialisation...
-                </>
-              ) : (
-                <>
-                  <Lock className="w-4 h-4" />
-                  Payer {formatted} FCFA via FeexPay
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              <Lock className="w-4 h-4" />
+              Payer {formatted} FCFA via FedaPay
+              <ArrowRight className="w-5 h-5" />
             </button>
 
-            {/* FeexPay trust line */}
             <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-blanc/40">
               <ShieldCheck className="w-3.5 h-3.5 text-[#C9A227]" />
-              <span>Paiement chiffré et sécurisé par</span>
-              <FeeXPayLogo size={56} />
+              <span>Paiement chiffré et sécurisé par FedaPay</span>
             </div>
 
-            {/* Accepted providers row */}
+            {/* Accepted providers */}
             <div className="mt-5 pt-5 border-t border-blanc/[0.06]">
               <p className="text-center text-[10px] uppercase tracking-wider text-blanc/40 mb-3">
                 Moyens acceptés
@@ -497,7 +334,6 @@ export function PaymentSection({
           </motion.div>
         </div>
 
-        {/* Footer */}
         <motion.footer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
