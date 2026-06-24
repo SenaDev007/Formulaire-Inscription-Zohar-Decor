@@ -215,7 +215,8 @@ export function FormationSection({
           </div>
         </motion.div>
 
-        {/* Participants list */}
+        {/* Participants list — only shown when searching (at least 2 chars) */}
+        {searchQuery.trim().length >= 2 && (
         <div className="bg-[#1A1A1A] border border-[#C9A227]/20 rounded-2xl p-4 mb-4 max-h-[400px] overflow-y-auto">
           {loading ? (
             <div className="text-center py-8">
@@ -244,13 +245,16 @@ export function FormationSection({
               {filtered.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => p.status !== "PAID_FULL" && setSelected(p)}
+                  onClick={() => {
+                    if (p.status !== "PAID_FULL") {
+                      setSelected(p);
+                      setSearchQuery("");
+                    }
+                  }}
                   disabled={p.status === "PAID_FULL"}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                     p.status === "PAID_FULL"
                       ? "border-green-500/20 bg-green-500/[0.03] opacity-60 cursor-not-allowed"
-                      : selected?.id === p.id
-                      ? "border-[#C9A227] bg-[#C9A227]/[0.08]"
                       : "border-blanc/[0.06] hover:border-[#C9A227]/30 hover:bg-blanc/[0.02]"
                   }`}
                 >
@@ -267,14 +271,13 @@ export function FormationSection({
                     <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/15 text-green-400 font-semibold flex-shrink-0">
                       Formation payée
                     </span>
-                  ) : selected?.id === p.id ? (
-                    <Check className="w-4 h-4 text-[#C9A227] flex-shrink-0" strokeWidth={3} />
                   ) : null}
                 </button>
               ))}
             </div>
           )}
         </div>
+        )}
 
         {/* Selected participant + payment */}
         {selected && (
