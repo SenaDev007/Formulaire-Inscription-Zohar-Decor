@@ -351,9 +351,11 @@ export async function sendConfirmationEmail(
   data: ConfirmationEmailData
 ): Promise<{ success: boolean; error?: string }> {
   const html = buildConfirmationEmailHtml(data);
-  const subject = payment?.type === "FORMATION"
+  const subject = data.payment?.type === "FORMATION"
     ? `Souscription frais de formation — Zohar Décor`
     : `Confirmation d'inscription — Zohar Décor`;
+
+  console.log(`[email] Participant email → TO: ${to} | FROM: ${fromAddress} | SUBJECT: ${subject}`);
 
   if (!getResend()) {
     console.warn(
@@ -611,20 +613,20 @@ export async function sendAdminNotification(
   const html = buildAdminNotificationHtml(type, participant, payment);
   const subject = isPaymentSubject(type, participant);
 
+  console.log(`[email] Admin notification → TO: ${targetEmail} | FROM: ${fromAddress} | SUBJECT: ${subject}`);
+
   try {
     const { error } = await getResend()!.emails.send({
       from: fromAddress,
       to: targetEmail,
       subject,
       html,
-      // Also reply-to the participant if they have email
-      replyTo: participant.email,
     });
     if (error) {
-      console.error("[email] admin notification error:", error);
+      console.error("[email] admin notification Resend error:", JSON.stringify(error));
       return { sent: false, error: error.message };
     }
-    console.log(`[email] Admin notification sent to ${targetEmail}: ${subject}`);
+    console.log(`[email] Admin notification SENT to ${targetEmail}`);
     return { sent: true };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
