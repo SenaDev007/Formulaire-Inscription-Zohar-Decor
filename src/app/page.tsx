@@ -54,24 +54,38 @@ export default function Home() {
 
   // Read view from URL hash on mount + hash changes
   useEffect(() => {
-    // Check for FedaPay payment success redirect
+    // === SERMA-HUB pattern: detect FedaPay payment success redirect ===
     const params = new URLSearchParams(window.location.search);
-    const isPaymentSuccess =
-      params.get("payment") === "success" || params.get("status") === "approved";
+    const isPaid = params.get("payment") === "success" || params.get("status") === "approved";
+    if (isPaid) {
+      // Clean URL immediately
+      window.history.replaceState({}, "", window.location.pathname);
 
-    if (isPaymentSuccess) {
-      // FedaPay payment successful — confirm via API
-      const participantId = params.get("participantId");
-      if (participantId) {
-        // Call the payment confirm endpoint
-        fetch("/api/payment/fedapay-confirm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ participantId }),
-        }).then((res) => res.json()).then((json) => {
-          // Clean URL
-          window.history.replaceState({}, "", "/");
-          // Show confirmation with the real registration ID
+      // Read saved participant data from localStorage
+      const saved = localStorage.getItem("zd_pending_payment");
+      if (!saved) {
+        // Use setTimeout to avoid setState in effect
+        setTimeout(() => setView("home"), 0);
+        return;
+      }
+
+      let parsed: { participantId: string; registrationId: string; prenoms: string };
+      try {
+        parsed = JSON.parse(saved);
+      } catch {
+        setTimeout(() => setView("home"), 0);
+        return;
+      }
+
+      // Send confirmation to API
+      fetch("/api/payment/fedapay-confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participantId: parsed.participantId }),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          localStorage.removeItem("zd_pending_payment");
           if (json.success && json.registrationId) {
             setRegistrationId(json.registrationId);
             setView("confirmation");
@@ -79,14 +93,10 @@ export default function Home() {
             setView("home");
           }
           window.scrollTo({ top: 0, behavior: "smooth" });
-        }).catch(() => {
-          window.history.replaceState({}, "", "/");
+        })
+        .catch(() => { setTimeout(() => setView("home"), 0);
           setView("home");
         });
-      } else {
-        // No participantId — just go home
-        window.history.replaceState({}, "", "/");
-      }
       return;
     }
 
