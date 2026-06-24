@@ -11,7 +11,7 @@ import {
   MastercardLogo,
 } from "@/components/brand/PaymentLogos";
 
-export function Pricing({ onRegister }: { onRegister: () => void }) {
+export function Pricing({ onRegister, onFormation }: { onRegister: () => void; onFormation: () => void }) {
   return (
     <section id="tarifs" className="py-20 sm:py-24 bg-background relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -155,10 +155,10 @@ export function Pricing({ onRegister }: { onRegister: () => void }) {
               </div>
 
               <Button
-                onClick={onRegister}
+                onClick={onFormation}
                 className="shine-sweep relative overflow-hidden w-full h-12 rounded-full bg-[#C9A227] text-noir hover:bg-[#D4AF37] font-semibold shadow-[0_8px_24px_rgba(201,162,39,0.4)]"
               >
-                Commencer l'inscription
+                Souscrire à la formation
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </motion.div>

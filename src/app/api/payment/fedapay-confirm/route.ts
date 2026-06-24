@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const amount =
       paymentType === "FORMATION"
         ? 20000
-        : 1; // TODO: change back to 5000 after testing
+        : 100; // TEMPORAIRE: 100 FCFA pour test (normal: 5000)
 
     // Create or update a payment record
     const payment = await db.payment.create({

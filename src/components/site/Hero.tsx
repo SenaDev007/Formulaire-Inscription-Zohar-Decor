@@ -88,10 +88,10 @@ export function Hero({ onRegister }: { onRegister: () => void }) {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <a
-                href="#creations"
-                className="inline-flex items-center justify-center h-14 px-8 rounded-full border border-blanc/30 text-blanc hover:bg-blanc/10 backdrop-blur-sm transition-all text-base font-medium"
+                href="#tarifs"
+                className="inline-flex items-center justify-center h-14 px-8 rounded-full border border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/10 backdrop-blur-sm transition-all text-base font-medium"
               >
-                Voir les créations
+                Souscris à la formation
               </a>
             </motion.div>
 

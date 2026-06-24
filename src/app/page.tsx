@@ -14,6 +14,7 @@ import { RegistrationForm } from "@/components/site/RegistrationForm";
 import { PaymentSection } from "@/components/site/PaymentSection";
 import { ConfirmationSection } from "@/components/site/ConfirmationSection";
 import { AdminSection } from "@/components/site/AdminSection";
+import { FormationSection } from "@/components/site/FormationSection";
 import { FloatingCTA } from "@/components/site/FloatingCTA";
 
 export type View =
@@ -21,7 +22,8 @@ export type View =
   | "register"
   | "payment"
   | "confirmation"
-  | "admin";
+  | "admin"
+  | "formation";
 
 export type ParticipantSummary = {
   id: string;
@@ -104,6 +106,7 @@ export default function Home() {
       const h = window.location.hash.replace("#", "");
       if (h === "admin") setView("admin");
       else if (h === "register") setView("register");
+      else if (h === "formation") setView("formation");
       else if (h === "home" || h === "") setView("home");
     };
     apply();
@@ -158,7 +161,10 @@ export default function Home() {
               <>
                 <Hero onRegister={() => navigate("register")} />
                 <Creations />
-                <Pricing onRegister={() => navigate("register")} />
+                <Pricing
+                  onRegister={() => navigate("register")}
+                  onFormation={() => navigate("formation")}
+                />
                 <FAQ />
               </>
             )}
@@ -182,6 +188,16 @@ export default function Home() {
               <ConfirmationSection
                 registrationId={registrationId}
                 onBackHome={() => navigate("home")}
+              />
+            )}
+
+            {view === "formation" && (
+              <FormationSection
+                onPaymentComplete={(regId) => {
+                  setRegistrationId(regId);
+                  navigate("confirmation");
+                }}
+                onBack={() => navigate("home")}
               />
             )}
 

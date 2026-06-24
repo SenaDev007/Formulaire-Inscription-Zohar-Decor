@@ -10,14 +10,28 @@ import { TRAINING_INFO } from "@/lib/email";
 export function normalizePhone(phone: string): string {
   // Strip everything except digits
   let digits = phone.replace(/[^\d]/g, "");
-  // Benin country code is 229; if the number starts with 0 and is 10 digits, prepend 229
-  if (digits.startsWith("0") && digits.length === 10) {
-    digits = "229" + digits.substring(1);
+
+  // Remove leading + if present (already stripped by regex above)
+  // Benin numbers: format is 01XXXXXXXX (10 digits with leading 0)
+  // For wa.me, we need: 229 + 01XXXXXXXX = 22901XXXXXXXX (12 digits)
+
+  // If starts with +229 or 229, keep as is (already has country code)
+  if (digits.startsWith("229")) {
+    // Keep the full number including the 0 after 229
+    // e.g. 2290162597692 stays as is
+    return digits;
   }
-  // If it starts with "+229" already handled above; ensure leading 229 if 9 digits
-  if (!digits.startsWith("229") && digits.length === 9) {
-    digits = "229" + digits;
+
+  // If starts with 0 (local format like 0162597692), prepend 229
+  if (digits.startsWith("0")) {
+    return "229" + digits;
   }
+
+  // If 8 digits without 0 prefix, prepend 2290
+  if (digits.length <= 9) {
+    return "2290" + digits;
+  }
+
   return digits;
 }
 

@@ -30,6 +30,10 @@ export function Header({
     onNavigate("register");
     setMobileOpen(false);
   };
+  const goFormation = () => {
+    onNavigate("formation");
+    setMobileOpen(false);
+  };
 
   return (
     <header
@@ -72,6 +76,7 @@ export function Header({
               { label: "Créations", href: "#creations" },
               { label: "Tarifs", href: "#tarifs" },
               { label: "FAQ", href: "#faq" },
+              { label: "Formation", action: goFormation },
             ].map((item) =>
               "action" in item ? (
                 <button

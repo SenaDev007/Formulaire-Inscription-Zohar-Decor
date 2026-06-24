@@ -6,7 +6,7 @@ const apiKey = process.env.RESEND_API_KEY;
 const fromName = process.env.EMAIL_FROM_NAME || "Zohar Décor";
 const fromEmail = process.env.EMAIL_FROM_NOREPLY || "noreply@academiahelm.com";
 const fromAddress = `${fromName} <${fromEmail}>`;
-const adminNotifyEmail = process.env.RESEND_TO_EMAIL || "";
+const adminNotifyEmail = process.env.RESEND_TO_EMAIL || process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com";
 
 // Public URL of the WhatsApp group QR code image.
 // In production (Vercel), this resolves to /qr-whatsapp-group.jpeg on the deployed domain.
@@ -68,8 +68,8 @@ export function buildConfirmationEmailHtml({
   const formattedAmount = new Intl.NumberFormat("fr-FR").format(amount);
   const paymentTypeLabel =
     payment?.type === "FORMATION"
-      ? "Frais de formation (20 000 FCFA)"
-      : "Frais d'inscription (5 000 FCFA)";
+      ? `Frais de formation (${new Intl.NumberFormat("fr-FR").format(TRAINING_INFO.trainingFee)} FCFA)`
+      : `Frais d'inscription (${new Intl.NumberFormat("fr-FR").format(TRAINING_INFO.inscriptionFee)} FCFA)`;
 
   return `
 <!DOCTYPE html>
@@ -148,8 +148,7 @@ export function buildConfirmationEmailHtml({
                 <!-- QR Code du groupe WhatsApp -->
                 <div style="background:#FFFFFF;border-radius:12px;padding:16px;display:inline-block;margin:0 auto 14px;">
                   <img src="${WHATSAPP_QR_URL}" alt="QR Code groupe WhatsApp Zohar Décor"
-                       width="180" height="180"
-                       style="display:block;margin:0 auto;border-radius:8px;" />
+                       width="200" style="display:block;margin:0 auto;border-radius:8px;height:auto;max-width:200px;" />
                   <p style="margin:10px 0 0;font-size:11px;color:#666;text-align:center;">
                     Scannez ce QR code avec votre téléphone<br/>pour rejoindre le groupe
                   </p>
@@ -260,8 +259,7 @@ export function buildRegistrationConfirmationHtml({
 
                 <div style="background:#FFFFFF;border-radius:12px;padding:16px;display:inline-block;margin:0 auto 14px;">
                   <img src="${WHATSAPP_QR_URL}" alt="QR Code groupe WhatsApp Zohar Décor"
-                       width="180" height="180"
-                       style="display:block;margin:0 auto;border-radius:8px;" />
+                       width="200" style="display:block;margin:0 auto;border-radius:8px;height:auto;max-width:200px;" />
                   <p style="margin:10px 0 0;font-size:11px;color:#666;text-align:center;">
                     Scannez ce QR code avec votre téléphone<br/>pour rejoindre le groupe
                   </p>
