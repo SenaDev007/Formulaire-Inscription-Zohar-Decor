@@ -18,13 +18,14 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Search by nomComplet, prenoms, or email (case-insensitive)
+  // Search by nomComplet, prenoms, email, or telWhatsApp
+  // Use contains without mode (works on both SQLite and PostgreSQL)
   const participant = await db.participant.findFirst({
     where: {
       OR: [
-        { nomComplet: { contains: name, mode: "insensitive" } },
-        { prenoms: { contains: name, mode: "insensitive" } },
-        { email: { contains: name, mode: "insensitive" } },
+        { nomComplet: { contains: name } },
+        { prenoms: { contains: name } },
+        { email: { contains: name } },
         { telWhatsApp: { contains: name } },
       ],
       status: { notIn: ["CANCELLED"] },

@@ -68,14 +68,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Fire-and-forget: admin notification ONLY (email → auroretheodoraa@gmail.com)
-    // The participant does NOT receive an email at this stage — they must pay
-    // the inscription fee first to be considered officially registered.
-    // The participant is created with status "UNPAID" and will NOT appear
-    // in the registered participants list until payment is confirmed.
-    sendAdminNotification("NEW_REGISTRATION", participant).catch((e) =>
-      console.error("[register] admin notification error:", e?.message || e)
-    );
+    // Send admin notification (email → auroretheodoraa@gmail.com)
+    // Use await (not fire-and-forget) to ensure it actually sends
+    try {
+      const result = await sendAdminNotification("NEW_REGISTRATION", participant);
+      console.log("[register] admin notification result:", JSON.stringify(result));
+    } catch (e) {
+      console.error("[register] admin notification error:", e?.message || e);
+    }
 
     return NextResponse.json({ success: true, participant });
   } catch (e: unknown) {

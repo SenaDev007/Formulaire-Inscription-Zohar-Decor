@@ -69,19 +69,24 @@ export async function POST(req: NextRequest) {
       where: { id: participantId },
     });
 
-    // Send emails (fire and forget)
+    // Send emails — use await to ensure they actually send
     if (updatedParticipant) {
-      sendConfirmationEmail(updatedParticipant.email, {
-        participant: updatedParticipant,
-        payment,
-      }).catch((e) =>
-        console.error("[fedapay-confirm] email error:", e?.message || e)
-      );
+      try {
+        const emailResult = await sendConfirmationEmail(updatedParticipant.email, {
+          participant: updatedParticipant,
+          payment,
+        });
+        console.log("[fedapay-confirm] participant email result:", JSON.stringify(emailResult));
+      } catch (e) {
+        console.error("[fedapay-confirm] email error:", e?.message || e);
+      }
 
-      sendAdminNotification("PAYMENT_CONFIRMED", updatedParticipant, payment).catch(
-        (e) =>
-          console.error("[fedapay-confirm] admin notification error:", e?.message || e)
-      );
+      try {
+        const adminResult = await sendAdminNotification("PAYMENT_CONFIRMED", updatedParticipant, payment);
+        console.log("[fedapay-confirm] admin notification result:", JSON.stringify(adminResult));
+      } catch (e) {
+        console.error("[fedapay-confirm] admin notification error:", e?.message || e);
+      }
     }
 
     return NextResponse.json({
