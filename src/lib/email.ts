@@ -21,19 +21,14 @@ function getResend(): Resend | null {
 const fromName = process.env.EMAIL_FROM_NAME || "Zohar Décor";
 const fromEmail = process.env.EMAIL_FROM_NOREPLY || "noreply@academiahelm.com";
 const fromAddress = `${fromName} <${fromEmail}>`;
-const adminNotifyEmail = process.env.RESEND_TO_EMAIL || process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com";
+const adminNotifyEmail = "auroretheodoraa@gmail.com"; // Hardcoded — always send admin emails here
 
-// Public URL of the WhatsApp group QR code image.
-// In production (Vercel), this resolves to /qr-whatsapp-group.jpeg on the deployed domain.
-// For emails to render the image, it MUST be a public absolute URL.
-const WHATSAPP_QR_URL =
-  (process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app") +
-  "/qr-whatsapp-group.jpeg";
+// Public URLs for email images — hardcoded to Vercel production URL
+const APP_URL = "https://zohar-decor.vercel.app";
+const WHATSAPP_QR_URL = APP_URL + "/qr-whatsapp-group.jpeg";
 
 // Public URL of the Zohar Décor logo for email headers.
-export const LOGO_URL =
-  (process.env.NEXT_PUBLIC_APP_URL || "https://zohar-decor.vercel.app") +
-  "/logo_zohar_decor.png";
+export const LOGO_URL = APP_URL + "/logo_zohar_decor.png";
 
 
 export const TRAINING_INFO = {
