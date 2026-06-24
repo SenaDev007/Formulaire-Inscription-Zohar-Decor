@@ -41,26 +41,44 @@ export function buildWhatsAppLink(phone: string, message: string): string {
   return `https://wa.me/${normalized}?text=${encoded}`;
 }
 
-export function buildConfirmationWhatsAppMessage(p: Participant): string {
+/**
+ * Message FROM the participant TO Zohar Décor.
+ * The participant clicks the WhatsApp button to inform Zohar Décor that
+ * they have paid their fees. Opens WhatsApp addressed to Zohar Décor's number.
+ */
+export function buildParticipantToZoharMessage(p: Participant): string {
+  const paymentType = p.paymentType === "FORMATION" ? "frais de formation" : "frais d'inscription";
+  return `Bonjour Zohar Décor,
+
+C'est ${p.prenoms} ${p.nomComplet}.
+
+Je viens de payer mes ${paymentType} via FedaPay.
+
+Merci de confirmer la réception et de réserver ma place pour la formation.
+
+Cordialement,
+${p.prenoms}`;
+}
+
+/**
+ * Message FROM Zohar Décor TO the participant.
+ * The admin (or the confirmation page) can send this to the participant
+ * to confirm that their fees have been received and their place is reserved.
+ * Opens WhatsApp addressed to the participant's number.
+ */
+export function buildZoharToParticipantMessage(p: Participant): string {
+  const paymentType = p.paymentType === "FORMATION" ? "frais de formation" : "frais d'inscription";
   return `Bonjour ${p.prenoms},
 
-✅ Votre inscription à la Formation en Résine Époxy de Zohar Décor a été validée.
+✅ Nous confirmons la réception de votre paiement des ${paymentType}.
 
-📋 Numéro d'inscription :
-${p.registrationId}
+Votre place est désormais réservée pour la Formation en Résine Époxy de Zohar Décor.
 
-📅 Dates :
-${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year}
-
-📍 Lieu :
-${TRAINING_INFO.location}
-
-💰 Nous avons bien reçu votre paiement.
+📅 Dates : ${TRAINING_INFO.startDate} au ${TRAINING_INFO.endDate} ${TRAINING_INFO.year}
+📍 Lieu : ${TRAINING_INFO.location}
 
 👥 Rejoignez le groupe WhatsApp des participants :
 ${TRAINING_INFO.whatsappGroupLink}
-
-Échangez avec les autres participants et recevez toutes les annonces importantes.
 
 À très bientôt.
 

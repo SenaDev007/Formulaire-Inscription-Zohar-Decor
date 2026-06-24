@@ -58,6 +58,7 @@ export function ConfirmationSection({
   const [data, setData] = useState<ConfirmationData | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
+  const [zoharConfirmLink, setZoharConfirmLink] = useState<string | null>(null);
   const [pollCount, setPollCount] = useState(0);
   const { toast } = useToast();
 
@@ -92,6 +93,14 @@ export function ConfirmationSection({
             );
             const waJson = await waRes.json();
             if (waJson.success) setWhatsappLink(waJson.link);
+            // Also fetch the Zohar → participant confirmation link
+            try {
+              const wa2Res = await fetch(
+                `/api/whatsapp/zohar-to-participant?registrationId=${encodeURIComponent(registrationId)}`
+              );
+              const wa2Json = await wa2Res.json();
+              if (wa2Json.success) setZoharConfirmLink(wa2Json.link);
+            } catch { /* ignore */ }
           } catch {
             /* ignore */
           }
@@ -499,7 +508,19 @@ export function ConfirmationSection({
               className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl border border-[#25D366]/40 text-[#25D366] text-sm font-semibold hover:bg-[#25D366]/10 transition-all"
             >
               <WhatsAppIcon size={18} className="text-[#25D366]" />
-              Confirmation WhatsApp à Zohar Décor
+              Confirmer mon paiement à Zohar Décor
+            </a>
+          )}
+
+          {zoharConfirmLink && (
+            <a
+              href={zoharConfirmLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-[#25D366] text-white text-sm font-bold hover:bg-[#1DA851] transition-all shadow-[0_4px_16px_rgba(37,211,102,0.3)]"
+            >
+              <WhatsAppIcon size={18} className="text-white" />
+              Confirmation de Zohar Décor (place réservée)
             </a>
           )}
 
