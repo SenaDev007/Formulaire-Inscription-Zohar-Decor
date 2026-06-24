@@ -9,11 +9,11 @@ function getResend(): Resend | null {
   if (_resendChecked) return _resend;
   _resendChecked = true;
   const key = process.env.RESEND_API_KEY;
-  if (key) {
+  if (key && key.length > 5) {
     _resend = new Resend(key);
-    console.log("[email] Resend initialized with API key");
+    console.log("[email] Resend initialized. Key prefix:", key.substring(0, 6) + "...");
   } else {
-    console.warn("[email] RESEND_API_KEY not found in environment");
+    console.warn("[email] RESEND_API_KEY not found or too short. Value:", key ? `"${key.substring(0, 3)}..."` : "(empty)");
   }
   return _resend;
 }
@@ -46,8 +46,8 @@ export const TRAINING_INFO = {
   location:
     "Zongo 2, von Axe Beni CHC-Presdo, à 100 m du carrefour après EPP La Source, Terre Rouge en allant au CEG Nima.",
   capacity: 10,
-  inscriptionFee: 100, // TEST: 100 FCFA (normal: 5000)
-  trainingFee: 100, // TEST: 100 FCFA (normal: 20000)
+  inscriptionFee: 5000,
+  trainingFee: 20000,
   attestation: "Attestation de participation incluse.",
   contactPhone: process.env.CONTACT_PHONE || "+229 01 62 59 76 92",
   contactEmail: process.env.CONTACT_EMAIL || "auroretheodoraa@gmail.com",

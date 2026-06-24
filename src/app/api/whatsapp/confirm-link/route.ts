@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
   }
 
   const message = buildConfirmationWhatsAppMessage(participant);
-  const link = buildWhatsAppLink(participant.telWhatsApp, message);
+  // Send TO Zohar Décor's WhatsApp number (not the participant's number)
+  const link = buildWhatsAppLink(TRAINING_INFO.whatsappNumber, message);
 
   return NextResponse.json({ success: true, link });
 }

@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
       participant.status === "PAID_INSCRIPTION" ? "FORMATION" : "INSCRIPTION";
     const amount =
       paymentType === "FORMATION"
-        ? 100 // TEST
-        : 100; // TEST
+        ? 20000
+        : 5000;
 
     // Create or update a payment record
     const payment = await db.payment.create({

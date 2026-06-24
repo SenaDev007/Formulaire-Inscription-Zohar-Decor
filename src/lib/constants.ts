@@ -37,13 +37,13 @@ export const PAYMENT_OPTIONS = [
   {
     id: "INSCRIPTION",
     label: "Étape 1 — Inscription",
-    amount: 100, // TEST: 100 FCFA (normal: 5000)
+    amount: 5000,
     description: "Réserve votre place + accès groupe WhatsApp",
   },
   {
     id: "FORMATION",
     label: "Étape 2 — Frais de formation",
-    amount: 100, // TEST: 100 FCFA (normal: 20000)
+    amount: 20000,
     description: "Participation aux 3 jours de formation",
   },
 ] as const;
