@@ -37,7 +37,7 @@ export const PAYMENT_OPTIONS = [
   {
     id: "INSCRIPTION",
     label: "Étape 1 — Inscription",
-    amount: 1, // TEMPORAIRE: 1 FCFA pour test (normal: 5000)
+    amount: 10, // TEMPORAIRE: 10 FCFA pour test (normal: 5000)
     description: "Réserve votre place + accès groupe WhatsApp",
   },
   {
