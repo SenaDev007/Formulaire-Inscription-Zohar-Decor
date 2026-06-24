@@ -192,7 +192,6 @@ export async function initFeexPayPayment(
     amount: payload.amount,
     reseau: payload.provider,
     shop: SHOP_ID,
-    token: API_TOKEN,
     first_name: payload.fullName,
     email: payload.email,
     country: payload.country || "Bénin",
@@ -216,9 +215,16 @@ export async function initFeexPayPayment(
     );
     if (!res.ok) {
       const text = await res.text();
+      let errorMsg = `FeexPay HTTP ${res.status}`;
+      try {
+        const errData = JSON.parse(text);
+        errorMsg += `: ${errData.message || text}`;
+      } catch {
+        errorMsg += `: ${text}`;
+      }
       return {
         status: "FAILED",
-        message: `FeexPay HTTP ${res.status}: ${text}`,
+        message: errorMsg,
       };
     }
     const data = await res.json();
