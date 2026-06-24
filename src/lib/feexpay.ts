@@ -126,23 +126,9 @@ export async function initFeexPayPayment(
     };
   }
 
-  // Verify token format (V2 requires fp_ prefix)
-  if (!API_TOKEN.startsWith("fp_")) {
-    return {
-      status: "FAILED",
-      message:
-        "Le token FeexPay est invalide (V2). Il doit commencer par 'fp_'. Vérifiez FEEXPAY_API_TOKEN dans vos variables d'environnement.",
-    };
-  }
-
-  // Validate shop
-  const shopName = await verifyShop();
-  if (!shopName) {
-    return {
-      status: "FAILED",
-      message: `Shop FeexPay invalide — vérifiez FEEXPAY_SHOP_ID (${SHOP_ID})`,
-    };
-  }
+  // V2: No shop pre-validation needed — the init endpoint will return
+  // an error if the shop is invalid. Skipping verifyShop() avoids false
+  // negatives from the get_shop endpoint.
 
   const isCard =
     payload.provider === "VISA" || payload.provider === "MASTERCARD";

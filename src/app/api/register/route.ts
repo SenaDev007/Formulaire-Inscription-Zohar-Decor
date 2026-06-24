@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const count = await db.participant.count({
-      where: { status: { not: "CANCELLED" } },
+      where: { status: { notIn: ["UNPAID", "CANCELLED"] } },
     });
     if (count >= TRAINING_INFO.capacity) {
       return NextResponse.json(
@@ -75,13 +75,15 @@ export async function POST(req: NextRequest) {
         niveauEtudes: parsed.data.niveauEtudes,
         sourceConnaissance: parsed.data.sourceConnaissance,
         acceptConditions: true,
-        status: "PENDING",
+        status: "UNPAID",
       },
     });
 
     // Fire-and-forget: admin notification ONLY (email → auroretheodoraa@gmail.com)
     // The participant does NOT receive an email at this stage — they must pay
     // the inscription fee first to be considered officially registered.
+    // The participant is created with status "UNPAID" and will NOT appear
+    // in the registered participants list until payment is confirmed.
     sendAdminNotification("NEW_REGISTRATION", participant).catch((e) =>
       console.error("[register] admin notification error:", e?.message || e)
     );

@@ -28,43 +28,47 @@ export async function POST(req: NextRequest) {
 
     const { participantId, paymentType, provider, providerPhone } = parsed.data;
 
+    // For INSCRIPTION (first payment), the participant may not exist yet
+    // if we're using the new flow. Try to find them.
     const participant = await db.participant.findUnique({
       where: { id: participantId },
     });
-    if (!participant) {
-      return NextResponse.json(
-        { success: false, error: "Participant introuvable" },
-        { status: 404 }
-      );
+
+    if (participant) {
+      // Existing participant — enforce 2-step payment process
+      if (paymentType === "INSCRIPTION" && participant.status !== "UNPAID") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Vous avez déjà payé les frais d'inscription. Procédez au paiement des frais de formation (20 000 FCFA).",
+            participant,
+          },
+          { status: 409 }
+        );
+      }
+      if (paymentType === "FORMATION" && participant.status !== "PAID_INSCRIPTION") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Vous devez d'abord payer les frais d'inscription (5 000 FCFA) avant de payer les frais de formation.",
+            participant,
+          },
+          { status: 409 }
+        );
+      }
+      if (participant.status === "PAID_FULL") {
+        return NextResponse.json(
+          { success: false, error: "Ce participant a déjà payé l'intégralité.", participant },
+          { status: 409 }
+        );
+      }
     }
 
-    // Enforce 2-step payment process:
-    // - INSCRIPTION (5 000): available only if participant.status === "PENDING"
-    // - FORMATION (20 000): available only if participant.status === "PAID_INSCRIPTION"
-    if (paymentType === "INSCRIPTION" && participant.status !== "PENDING") {
+    // Card payments require a phone number
+    if (!providerPhone || providerPhone.trim().length < 8) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Vous avez déjà payé les frais d'inscription. Procédez au paiement des frais de formation (20 000 FCFA).",
-          participant,
-        },
-        { status: 409 }
-      );
-    }
-    if (paymentType === "FORMATION" && participant.status !== "PAID_INSCRIPTION") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Vous devez d'abord payer les frais d'inscription (5 000 FCFA) avant de payer les frais de formation.",
-          participant,
-        },
-        { status: 409 }
-      );
-    }
-    if (participant.status === "PAID_FULL") {
-      return NextResponse.json(
-        { success: false, error: "Ce participant a déjà payé l'intégralité.", participant },
-        { status: 409 }
+        { success: false, error: "Numéro de téléphone requis pour le paiement" },
+        { status: 400 }
       );
     }
 

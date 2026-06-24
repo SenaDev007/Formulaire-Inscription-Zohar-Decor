@@ -70,7 +70,7 @@ export function PaymentSection({
   onBack: () => void;
 }) {
   // Auto-determine payment step based on participant status:
-  // - PENDING → Step 1: INSCRIPTION (5 000 FCFA)
+  // - UNPAID → Step 1: INSCRIPTION (5 000 FCFA)
   // - PAID_INSCRIPTION → Step 2: FORMATION (20 000 FCFA)
   const [paymentType, setPaymentType] = useState<PaymentType>(
     participant.status === "PAID_INSCRIPTION" ? "FORMATION" : "INSCRIPTION"

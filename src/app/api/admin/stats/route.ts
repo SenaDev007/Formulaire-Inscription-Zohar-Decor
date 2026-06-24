@@ -12,16 +12,19 @@ export async function GET() {
     );
   }
 
+  // Total = only participants who have paid (exclude UNPAID and CANCELLED)
   const total = await db.participant.count({
-    where: { status: { not: "CANCELLED" } },
+    where: {
+      status: { notIn: ["UNPAID", "CANCELLED"] },
+    },
   });
   const paid = await db.participant.count({
     where: {
       status: { in: ["PAID_INSCRIPTION", "PAID_FULL", "VALIDATED"] },
     },
   });
-  const pending = await db.participant.count({
-    where: { status: "PENDING" },
+  const unpaid = await db.participant.count({
+    where: { status: "UNPAID" },
   });
   const cancelled = await db.participant.count({
     where: { status: "CANCELLED" },
@@ -50,7 +53,7 @@ export async function GET() {
     stats: {
       total,
       paid,
-      pending,
+      unpaid,
       cancelled,
       remaining,
       capacity: TRAINING_INFO.capacity,

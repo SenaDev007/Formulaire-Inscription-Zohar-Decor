@@ -16,7 +16,12 @@ export async function GET(req: NextRequest) {
   const status = url.searchParams.get("status") || "";
 
   const where: Record<string, unknown> = {};
-  if (status) where.status = status;
+  if (status) {
+    where.status = status;
+  } else {
+    // By default, exclude UNPAID participants (they haven't paid yet)
+    where.status = { not: "UNPAID" };
+  }
   if (search) {
     where.OR = [
       { nomComplet: { contains: search } },
